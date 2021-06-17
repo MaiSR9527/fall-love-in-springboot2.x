@@ -8,12 +8,13 @@
         <module>boot-mvc-simple</module>
         <module>boot-annotation-ioc</module>
         <module>boot-data-redis</module>
+        <module>boot-data-elasticsearch</module>
     </modules>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.2.3.RELEASE</version>
+        <version>2.3.3.RELEASE</version>
     </parent>
 
     <groupId>com.msr.better</groupId>
