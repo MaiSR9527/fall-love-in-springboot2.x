@@ -1,6 +1,6 @@
-package com.msr.better.mvc.controller;
+package com.msr.better.ioc.controller;
 
-import com.msr.better.mvc.model.User;
+import com.msr.better.ioc.model.User;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
