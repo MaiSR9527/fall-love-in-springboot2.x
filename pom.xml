@@ -7,6 +7,7 @@
     <modules>
         <module>boot-mvc-simple</module>
         <module>boot-annotation-ioc</module>
+        <module>boot-data-redis</module>
         <module>boot-jsr303-validation</module>
     </modules>
 
