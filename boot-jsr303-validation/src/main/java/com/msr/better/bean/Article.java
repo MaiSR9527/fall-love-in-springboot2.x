@@ -54,6 +54,6 @@ public class Article {
     /**
      * 状态
      */
-    @ListValue(list = {0, 1}, groups = {ValidateGroup.ArticleStatusValidate.class})
+    @ListValue(list = {0, 1, 2}, groups = {ValidateGroup.ArticleStatusValidate.class})
     private Integer status;
 }

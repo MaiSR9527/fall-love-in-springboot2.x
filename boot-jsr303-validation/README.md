@@ -7,6 +7,8 @@ categories:
 tags: SpringBoot
 ---
 
+# SpringBoot中使用Bean Validation校验参数
+
 # 一、简述
 
 JSR-303 是 JAVA EE 6 中的一项子规范，叫做 Bean Validation。Bean Validation 为 Java Bean 验证定义了相应的元数据模型和 API。用于对Java Bean 中的字段的值进行验证,使得基本的验证逻辑可以从业务代码中脱离出来。
@@ -190,9 +192,6 @@ public class ValidateGroup {
 	// 更新时检验
     public static interface UpdateValidate {
     }
-	// 更新文章状态是校验
-    public static interface ArticleStatusValidate {
-    }
 }
 ```
 
@@ -244,7 +243,7 @@ public class Article {
 
 ```
 
-编写几个测试方法
+编写controller演示方法，这时候校验注解里面就需要添加校验组了，`@Valid`是没有这个属性的，需要使用`@Validated`注解，在value属性中填写要生效的校验分组，该属性是个数组可以填写多个校验分组。
 
 ```java
 @RestController
@@ -264,6 +263,131 @@ public class TestController {
 
 ```
 
+使用Postman测试一下：
+
+调用添加接口时，文章id必须为空。
+
+![](https://cdn.jsdelivr.net/gh/MaiSR9527/blog-pic/record/record-bv21.png)
+
+调用更新接口时，必须带上文章id。
+
+![](https://cdn.jsdelivr.net/gh/MaiSR9527/blog-pic/record/record-bv3.png)
+
+如果Bean的一些校验注解上没有指定分组，但是在controller的校验参数上指定了校验分组`@Validated`，那么这些没有指定分组的属性是不会生效的。
+
+# 四、自定义校验器
+
+假如文章的状态只有0（审核中）、1（已通过）和2（删除）三种状态，所以前端传过来的参数只能是这三个，传过来是其他的那就提示参数有问题。但是看了一下提供的校验注解并没有我们符合我们需求的注解。所以我们需要自己动手自己实现。看下面代码：
+
+```java
+@Documented
+@Constraint(
+    	// 自定义校验器
+        validatedBy = {ListValueValidator.class}
+)
+@Target({ METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER, TYPE_USE,LOCAL_VARIABLE,TYPE_PARAMETER })
+@Retention(RUNTIME)
+public @interface ListValue {
+    // 这些可以属性参考Spring中的实现
+    String message() default "{com.msr.better.annotation.ListValue.message}";
+    Class<?>[] groups() default {};
+    Class<? extends Payload>[] payload() default {};
+    int[] list() default {};
+}
+```
+
+在使用校验注解时，当我没有指定message属性，它是会有一个默认的。这些默认的提示写在一个`ValidationMessages.properties`属性文件中，所以在resources文件夹下创建一个`ValidationMessages.properties`文件，内容如下：
+
+```properties
+com.msr.better.annotation.ListValue.message=必须提交指定值
+```
+
+这个默认的属性文件在`hibernate-validator`这个依赖里面，有各种语言的版本。
+
+![](https://cdn.jsdelivr.net/gh/MaiSR9527/blog-pic/record/record-bv4.png)
+
+在SpringBoot的配置文件中配置一下，防止`ValidationMessages.properties`属性文件内容中文乱码
+
+```yaml
+spring:
+  messages:
+    encoding: UTF-8
+```
 
 
-# 自定义校验器
+
+现在编写自定义校验器：
+
+```java
+public class ListValueValidator implements ConstraintValidator<ListValue, Integer> {
+
+    // 定义一个Set集合存放文章状态
+    private Set<Integer> set = new HashSet<>();
+
+    @Override
+    public void initialize(ListValue constraintAnnotation) {
+        // 获取@ListValue注解上list的属性（0、1、2）的指定的文章状态
+        int[] list = constraintAnnotation.list();
+        for (int i : list) {
+            set.add(i);
+        }
+    }
+
+    @Override
+    public boolean isValid(Integer value, ConstraintValidatorContext constraintValidatorContext) {
+        // 参数value就是传过来的参数，校验一下传过来的参数是否在Set集合里面
+        return set.contains(value);
+    }
+}
+```
+
+新增一个更新文章状态的校验分组：
+
+```java
+public class ValidateGroup {
+    // 添加时校验
+    public static interface AddValidate {
+    }
+	// 更新时检验
+    public static interface UpdateValidate {
+    }
+	// 更新文章状态时校验
+    public static interface ArticleStatusValidate {
+    }
+}
+```
+
+使用自定义的校验注解：
+
+```java
+@Data
+public class Article {
+    // ...
+    // 同上省略
+
+    /**
+     * 状态
+     */
+    @ListValue(list = {0, 1, 2}, groups = {ValidateGroup.ArticleStatusValidate.class})
+    private Integer status;
+}
+```
+
+编写一个controller的方法来演示：
+
+```java
+	@PutMapping("update/status")
+    public Object updateStatus(@Validated(value = {ValidateGroup.ArticleStatusValidate.class}) @RequestBody Article article) {
+        return article;
+    }
+```
+
+使用Postman测试：
+
+![](https://cdn.jsdelivr.net/gh/MaiSR9527/blog-pic/record/record-bv5.png)
+
+![](https://cdn.jsdelivr.net/gh/MaiSR9527/blog-pic/record/record-bv6.png)
+
+# 五、总结
+
+有些参数校验通过提供的注解来实现，可以减少手动编写校验代码，让整个项目更加的整洁。
