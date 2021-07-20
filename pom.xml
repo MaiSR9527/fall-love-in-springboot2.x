@@ -10,6 +10,7 @@
         <module>boot-data-redis</module>
         <module>boot-data-elasticsearch</module>
         <module>boot-jsr303-validation</module>
+        <module>boot-aop</module>
     </modules>
 
     <parent>
