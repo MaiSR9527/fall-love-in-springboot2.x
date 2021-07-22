@@ -7,8 +7,6 @@ categories:
 tags: SpringBoot
 ---
 
-
-
 # 一、AOP的术语和流程
 
 # 1.1 术语
@@ -25,8 +23,203 @@ Spring AOP流程：
 
 ![](https://cdn.jsdelivr.net/gh/MaiSR9527/blog-pic/spring/spring-aop.jpg)
 
-# 二、AOP详细开发
+# 二、AOP开发入门
 
-SpringBoot中通过注解的方式来配置切面，在开发上会简单很多。
+SpringBoot中通过注解的方式来声明切面，在开发上会简单很多。
 
-返回类型 包名.类名.方法名(参数)
+添加依赖
+
+```xml
+	<parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.3.3.RELEASE</version>
+    </parent>
+	<dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+    </dependencies>
+```
+
+## 2.1 编写一个Controller
+
+HelloController
+
+```java
+@RestController
+@RequestMapping("hello")
+public class HelloController {
+
+    @GetMapping("test1/{id}")
+    public Object test1(@PathVariable("id")Integer id) {
+        System.out.println(id);
+        return "success";
+    }
+}
+```
+
+## 2.2 开发切面
+
+```java
+@Aspect
+@Component
+public class HelloAspect {
+
+    /**
+     * 定义一个切入点
+     */
+    @Pointcut("execution(* com.msr.better.aop.controller.HelloController.test1(..))")
+    public void pointCut(){
+        
+    }
+
+    /**
+     * 前置通知
+     *
+     * @param joinPoint
+     */
+    @Before("pointCut()")
+    public void before() {
+        System.out.println("======================= Before ======================");
+    }
+
+    /**
+     * 后置通知
+     */
+    @After("pointCut()")
+    public void after() {
+        System.out.println("======================= After ======================");
+    }
+
+    /**
+     * 返回通知
+     */
+    @AfterReturning("pointCut()")
+    public void afterReturn() {
+        System.out.println("======================= afterReturn ======================");
+    }
+
+    /**
+     * 异常通知
+     */
+    @AfterThrowing("pointCut()")
+    public void afterThrow() {
+        System.out.println("======================= afterThrow ======================");
+    }
+
+    /**
+     * 环绕通知
+     */
+    @Around("pointCut()")
+    public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
+        // 获取拦截的方法的参数
+        Object[] args = joinPoint.getArgs();
+        for (int i = 0; i < args.length; i++) {
+            System.out.println("参数：" + args[i]);
+        }
+        // 被拦截的方法所在的类
+        System.out.println(joinPoint.getTarget().getClass().getName());
+        Object proceed = joinPoint.proceed();
+        System.out.println("返回结果：" + proceed);
+        return proceed;
+    }
+}
+```
+
+## 2.3 启动类
+
+```java
+@SpringBootApplication
+public class AopApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(AopApplication.class, args);
+    }
+}
+```
+
+## 2.4 测试
+
+通过IDEA带的HTTP Client插件，然后查看程序的输出
+
+```
+GET http://localhost:8088/hello/test1/123
+```
+
+输出结果：
+
+```
+参数：123
+com.msr.better.aop.controller.HelloController
+======================= Before ======================
+controller:123
+======================= afterReturn ======================
+======================= After ======================
+返回结果：success
+```
+
+在没有发生异常的时候，切面是以这样的顺序执行的
+
+> @Around中执行joinPoint.proceed() 前面的代码被执行
+>
+> @Before 前置通知被执行
+>
+> Object proceed = joinPoint.proceed();    放行
+>
+> 执行连接点方法 ，例如上面例子中的com.msr.better.aop.controller.HelloController.test1方法
+>
+> @AfterReturn  返回通知被执行
+>
+> @After 后置通知被执行
+>
+> @Around中执行joinPoint.proceed() 后面的代码被执行
+>
+> 
+> 代码中 return proceed 把结果返回
+
+注意，ProceedingJoinPoint joinPoint 参数只能在环绕通知中引用，在其他通知当作参数引用时会爆一下的错误。可见Spring中切面的放行是在环绕通知中做的。
+
+```
+ProceedingJoinPoint is only supported for around advice
+```
+
+ProceedingJoinPoint该类是一个接口，在环绕通知中使用的实现类是MethodInvocationProceedingJoinPoint，其中比较常用的一些方法：
+
+* getTarget()   获取被代理的对象，即连接点所在的类的实例
+* getSignature() 封装了签名信息的对象。通过Signature对象可以进一步拿到一些信息：
+  * 可以拿到当前连接点的方法名(getName方法)
+  * 可以拿到连接点所在类的全类名(getDeclaringTypeName方法)
+  * 连接点的详细信息(toLongString方法)。例如上面的例子调用的话结果是：`public java.lang.Object com.msr.better.aop.controller.HelloController.test1(java.lang.Integer)`
+  * 与toLongString方法相反的toShortString方法则会得到：`HelloController.test1(..)`
+* getArgs()：获取连接点的所有参数
+* getThis()：也是得到被代理的对象，getTarget方法就是进一步调用getThis方法得到代理对象的
+
+# 三、切入点表达式
+
+切入点表达式通常都会是从宏观上定位一组方法，和具体某个通知的注解结合起来就能够确定对应的连接点。AOP(面向切面编程)可以说是一种编程思想，AspectJ是其中的一种具体实现，Spring AOP使用的就是AspectJ。
+
+AspectJ中支持的切入点表达式
+
+| arg() | 限定 |
+| ----- | ---- |
+|       |      |
+|       |      |
+|       |      |
+|       |      |
+|       |      |
+|       |      |
+|       |      |
+|       |      |
+
+切入点表达式的格式：
+
+> execution("权限修饰符 返回值类型 简单类名/全类名.方法名(参数列表)")
+
+
+

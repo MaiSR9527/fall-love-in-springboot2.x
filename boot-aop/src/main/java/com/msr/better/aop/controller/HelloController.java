@@ -16,7 +16,7 @@ public class HelloController {
 
     @GetMapping("test1/{id}")
     public Object test1(@PathVariable("id")Integer id) {
-        System.out.println(id);
+        System.out.println("controller:"+id);
         return "success";
     }
 }
