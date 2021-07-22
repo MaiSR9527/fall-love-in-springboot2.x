@@ -1,0 +1,20 @@
+elasticjob:
+  reg-center:
+    server-lists: 127.0.0.1:2181
+    namespace: elasticjob-lite-springboot
+  jobs:
+    dataflowJob:
+      // Job类型
+      elasticJobClass: org.apache.shardingsphere.elasticjob.dataflow.job.DataflowJob
+      // cron表达式
+      cron: 0/5 * * * * ?
+      // 总分片数
+      shardingTotalCount: 3
+      // 分片对应的参数
+      shardingItemParameters: 0=Beijing,1=Shanghai,2=Guangzhou
+      scriptJob:
+        elasticJobType: SCRIPT
+        cron: 0/10 * * * * ?
+        shardingTotalCount: 3
+        props:
+          script.command.line: "echo SCRIPT Job: "

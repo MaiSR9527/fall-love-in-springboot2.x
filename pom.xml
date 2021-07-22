@@ -11,6 +11,7 @@
         <module>boot-data-elasticsearch</module>
         <module>boot-jsr303-validation</module>
         <module>boot-aop</module>
+        <module>boot-elasticjob-lite</module>
     </modules>
 
     <parent>
