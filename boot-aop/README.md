@@ -200,38 +200,151 @@ ProceedingJoinPoint该类是一个接口，在环绕通知中使用的实现类�
 * getArgs()：获取连接点的所有参数
 * getThis()：也是得到被代理的对象，getTarget方法就是进一步调用getThis方法得到代理对象的
 
-# 三、切入点表达式
+# 三、多切面执行顺序
 
-切入点表达式通常都会是从宏观上定位一组方法，和具体某个通知的注解结合起来就能够确定对应的连接点。AOP(面向切面编程)可以说是一种编程思想，AspectJ是其中的一种具体实现，Spring AOP使用的就是AspectJ。
+如果定义了多个切面，而且Spring是支持这些切面都拦截了同样的连接点。因此我们有必要知道这些切面的运行顺序。
 
-AspectJ中支持的切入点表达式
+## 3.1 定义多个切面
 
-| 项目类型      | 描述                                      |
-| ------------- | ----------------------------------------- |
-| arg()         | 限定连接点方法参数                        |
-| @args()       | 通过链接上方法参数上的注解进行限定        |
-| execution()   | 听雨匹配链接点的执行方法                  |
-| this()        | 限定连接点匹配AOP代理Bean引用为指定的类型 |
-| target        | 目标对象（即代理对象）                    |
-| @target()     | 限定目标对象的配置了指定的注解            |
-| within        | 限制连接点匹配指定的类型                  |
-| @within()     | 限定连接点带有匹配注解类型                |
-| @annotation() | 限定带有指定注解的连接点                  |
+切面1
 
-切入点表达式的格式：
+```java
+@Aspect
+public class MyAspect1 {
+    @Pointcut("execution(public * com.msr.better.aop.controller.HelloController.test2(..))")
+    public void pointCut1() {
 
-> execution("权限修饰符 返回值类型 简单类名/全类名.方法名(参数列表)")
+    }
+    @Before("pointCut1()")
+    public void b1() {
+        System.out.println("MyAspect1 before");
+    }
+}
+```
 
-TODO
+切面2
 
-# 四、AOP引入增强
+```java
+@Aspect
+public class MyAspect2 {
+    @Pointcut("execution(public * com.msr.better.aop.controller.HelloController.test2(..))")
+    public void pointCut2() {
 
-TODO
+    }
+    @Before("pointCut2()")
+    public void b2() {
+        System.out.println("MyAspect2 before");
+    }
+}
+```
 
-# 五、多切面执行顺序
+切面3
 
-TODO
+```java
+@Aspect
+public class MyAspect3 {
 
-# 六、总结
+    @Pointcut("execution(public * com.msr.better.aop.controller.HelloController.test2(..))")
+    public void pointCut3() {
 
-TODO
+    }
+
+    @Before("pointCut3()")
+    public void b3() {
+        System.out.println("MyAspect3 before");
+    }
+}
+```
+
+在启动类里面注入
+
+```java
+@Bean
+public MyAspect1 myAspect1() {
+    return new MyAspect1();
+}
+
+@Bean
+public MyAspect2 myAspect2() {
+    return new MyAspect2();
+}
+
+@Bean
+public MyAspect3 myAspect3() {
+    return new MyAspect3();
+}
+```
+
+test2方法
+
+```java
+@GetMapping("test2")
+public Object test2() {
+    return "success";
+}
+```
+
+测试，利用IDEA自带的功能
+
+> GET http://localhost:8088/hello/test2
+>
+> 输出：
+>
+> MyAspect1 before
+> MyAspect2 before
+> MyAspect3 before
+
+如果改变这三个Bean的注入顺序，列如
+
+```java
+@Bean
+public MyAspect3 myAspect3() {
+    return new MyAspect3();
+}
+@Bean
+public MyAspect1 myAspect1() {
+    return new MyAspect1();
+}
+
+@Bean
+public MyAspect2 myAspect2() {
+    return new MyAspect2();
+}
+```
+
+再次测试，结果顺序也会变。
+
+> MyAspect3 before
+> MyAspect1 before
+> MyAspect2 before
+
+很明显这来控制切面的执行顺序很不可控，一般我们在切面的的类型上添加注解@Order，例如：
+
+> @Aspect
+> @Order(1)
+> public class MyAspect1
+>
+> @Aspect
+> @Order(2)
+> public class MyAspect2
+>
+> @Aspect
+> @Order(3)
+> public class MyAspect3 
+
+或者切面实现Orderd接口，并且实现getOrder()方法，例如
+
+```java
+@Aspect
+public class MyAspect3 implements Orderd{
+    @Override
+    public int getOrder(){
+        // 指定顺序
+        return 3;
+    }
+}
+```
+
+# 四、总结
+
+关于SpringBoot中使用AOP就介绍到这里，或许跟使用纯Spring Framework编写相比，可能也就大同小异吧。使用AOP增强业务方法在现实开发中也是很常见的，例如：通过自定义注解+AOP+多数据，实现数据源的动态切换跟读写分离。

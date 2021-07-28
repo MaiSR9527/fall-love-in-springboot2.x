@@ -19,4 +19,9 @@ public class HelloController {
         System.out.println("controller:"+id);
         return "success";
     }
+
+    @GetMapping("test2")
+    public Object test2() {
+        return "success";
+    }
 }
