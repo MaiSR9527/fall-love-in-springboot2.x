@@ -12,6 +12,9 @@
         <module>boot-jsr303-validation</module>
         <module>boot-aop</module>
         <module>boot-elasticjob-lite</module>
+        <module>boot-datasource</module>
+        <module>boot-distributed-redisson</module>
+        <module>boot-datasource-jdbctemplate</module>
     </modules>
 
     <parent>
