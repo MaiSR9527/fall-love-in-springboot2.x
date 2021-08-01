@@ -1,0 +1,19 @@
+spring:
+  main:
+    banner-mode: off
+server:
+  port: 8000
+  compression:
+    enabled: true
+#  tomcat:
+#    accesslog:
+#      enabled: true
+#      file-date-format: yyyyMMdd
+#      prefix: tomcat_access_log
+#      suffix: .log
+#      pattern:
+#    basedir: access-log
+  ssl:
+    key-alias: boot_https
+    key-store: classpath:boot_https.p12
+    key-store-password: 123456

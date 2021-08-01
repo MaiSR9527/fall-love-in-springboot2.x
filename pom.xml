@@ -12,9 +12,11 @@
         <module>boot-jsr303-validation</module>
         <module>boot-aop</module>
         <module>boot-elasticjob-lite</module>
-        <module>boot-datasource</module>
         <module>boot-distributed-redisson</module>
-        <module>boot-datasource-jdbctemplate</module>
+        <module>boot-datasource/boot-datasource-jdbctemplate</module>
+        <module>boot-basic-config</module>
+        <module>boot-datasource/boot-datasource-jpa</module>
+        <module>boot-datasource/boot-datasource-mybatis</module>
     </modules>
 
     <parent>
