@@ -1,6 +1,6 @@
 ---
 layout: springboot
-title: SpringBoot访问数据库(JdbcTemplate、JPA和MyBatis)
+title: SpringBoot访问数据库入门(JdbcTemplate和JPA)
 date: 2021-05-18 9:10:12
 categories:
 - java
@@ -343,7 +343,234 @@ Spring社区整合Hibernate在这上面做了增强，JPA就是依靠Hibernate�
 ## 3.1 MySQL数据源和JPA的配置
 
 ```yaml
+spring:
+  datasource:
+    username: root
+    password: root123
+    url: jdbc:mysql://127.0.0.1:3306/test?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useSSL=false
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+      naming:
+        # 驼峰命名映射
+        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
 ```
+
+`spring.jpa.show-sql=true`在使用JPA执行sql时，把sql输出到日志显示。`spring.jpa.hibernate.ddl-auto=update`该配置项是当实体类对应的表不存在时，会自动创建表，存在则不会。
+
+> none：禁止DDL处理
+>
+> validate：验证架构，不对数据库做任何更改
+>
+> update：表不存在时创建
+>
+> create：每次启动都会删除表，然后重新创建
+>
+> create-drop：每次会话结束之后，就删除表
+
+`spring.jpa.naming`就是关于实体类命名和数据库字段的映射处理。有`physical-strategy`和`implicit-strategy`。
+
+* 第一步：如果我们没有使用@Table或@Column指定了表或字段的名称，则由SpringImplicitNamingStrategy为我们隐式处理，表名隐式处理为类名，列名隐式处理为字段名。如果指定了表名列名，SpringImplicitNamingStrategy不起作用。
+* 第二步：将上面处理过的逻辑名称解析成物理名称。无论在实体中是否显示指定表名列名，SpringPhysicalNamingStrategy都会被调用。
+
+所以如果我们想要自定义命名策略，可以根据自己的需求选择继承二者，并在配置文件中通过spring.jpa.hibernate.naming.implicit-strategy 或 spring.jpa.hibernate.naming.physical-strategy 进行指定自己的策略(例如为表名添加指定前缀)。
 
 ## 3.2 JPA开发实战
 
+1、编写实体类
+
+```java
+@Data
+@Entity
+@Table(name = "t_student")
+public class Student {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+    @Convert(converter = SexConverter.class)
+    private SexEnum gender;
+    private Integer age;
+}
+```
+
+`@Data`在编译时生成getter、setter和toString方法。`@Entity`声明该类是个实体类。`@Table(name = "t_student")`声明该类关联的数据表。`@Id`声明主键，`@GeneratedValue(strategy = GenerationType.IDENTITY)`声明主键的生成策略是使用数据库自增Id。
+
+性别枚举类
+
+```
+@Getter
+public enum GenderEnum {
+    /**
+     * 1为男
+     */
+    MALE(1,"男"),
+    /**
+     * 2为女
+     */
+    FEMALE(2,"女");
+    private Integer id;
+    private String name;
+
+    GenderEnum(Integer id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public static GenderEnum getSexById(int id){
+        for (GenderEnum genderEnum : GenderEnum.values()) {
+            if (genderEnum.getId()==id){
+                return genderEnum;
+            }
+        }
+        return null;
+    }
+}
+```
+
+自定义的性别转换器
+
+```java
+public class GengerConverter implements AttributeConverter<GenderEnum, Integer> {
+    @Override
+    public Integer convertToDatabaseColumn(GenderEnum genderEnum) {
+        return genderEnum.getId();
+    }
+
+    @Override
+    public GenderEnum convertToEntityAttribute(Integer id) {
+        return GenderEnum.getSexById(id);
+    }
+}
+```
+
+2、定义JPA接口
+
+Repository是Spring Data项目的顶层接口，它并没有定义方法，其子接口CrudRepository定了实体基本的增删查改的方法，功能性还不足够强大，PagingAndSortingRepository对CrudRepository的功能进行扩展并且提供了分页和排序的功能，最后JpaRepository同时集成了PagingAndSortingRepository和QueryByExampleExecutor，拥有了按照例子查询的功能。一般我们开发只需要扩展JpaRepository接口即可。
+
+![](https://cdn.jsdelivr.net/gh/MaiSR9527/blog-pic/spring/jpa-Repository.jpg)
+
+定义操作Student实体类的接口，只需要继承JpaRepository即可。这样我们就可以使用Spring Data Jpa帮我实现的方法。
+
+```java
+@Repository
+public interface StudentRepository extends JpaRepository<Student, Long> {
+    /**
+     * 命名查询：通过name属性模糊查询
+     *
+     * @param name 学生名字
+     * @return 查询结果
+     */
+    List<Student> findByNameLike(String name);
+    
+    /**
+     * jql语言查询
+     * @param name
+     * @return
+     */
+    @Query("from Student where name like concat('%',?1,'%')")
+    List<Student> getUsers(String name);
+
+}
+```
+
+3、编写业务方法
+
+IStudentService接口
+
+```java
+public interface IStudentService {
+
+    Student findStudentById(Long id);
+
+    List<Student> findUsers(String name);
+
+    Student insertStudent(Student student);
+
+    Student updateStudent(Student student);
+
+    void deleteStudent(Long id);
+
+    List<Student> findAll();
+}
+```
+
+IStudentService实现类StudentServiceImpl
+
+```java
+@Service
+public class StudentServiceImpl implements IStudentService {
+
+    @Autowired
+    private StudentRepository studentRepository;
+
+    @Override
+    public Student findStudentById(Long id) {
+        return studentRepository.getOne(id);
+    }
+    
+    @Override
+    public List<Student> findUsers(String name) {
+        return studentRepository.findByNameLike(name);
+    }
+
+    @Transactional(rollbackFor = RuntimeException.class)
+    @Override
+    public Student insertStudent(Student student) {
+        return studentRepository.save(student);
+    }
+
+    @Transactional(rollbackFor = RuntimeException.class)
+    @Override
+    public Student updateStudent(Student student) {
+        return studentRepository.save(student);
+    }
+
+    @Transactional(rollbackFor = RuntimeException.class)
+    @Override
+    public void deleteStudent(Long id) {
+        studentRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Student> findAll() {
+        return studentRepository.findAll();
+    }
+}
+```
+
+上面的代码中，通过Jap来操作数据十分简单，很多基本的CRUD都已经实现了，只需要传参进去即可。通过注解进行事务管理`@Transactional(rollbackFor = RuntimeException.class)`，在执行多个sql时，只会在一个数据库连接内进行，避免了像使用JdbcTemplate的缺点。
+
+## 3.3 使用JPA语言
+
+```java
+	/**
+     * jql语言查询
+     * @param name
+     * @return
+     */
+    @Query("from Student where name like concat('%',?1,'%')")
+    List<Student> getUsers(String name);
+```
+
+使用JQL语言是要主要，主要操作的是实体类以及其属性，并不会去操作表。当然要使用原生的sql查询也可以，在`@Query`里面添加一个属性nativeQuery=true即可。
+
+## 3.4 使用命名查询
+
+```java
+    /**
+     * 命名查询：通过name属性模糊查询
+     *
+     * @param name 学生名字
+     * @return 查询结果
+     */
+    List<Student> findByNameLike(String name);
+```
+
+命名查询的动词是find/get开始，by标识通过实体类的哪一个属性作为条件，Like是对这个属性进行模糊查询，类型还有升降序之类的。多个属性条件之间可以使用And或者Or逻辑处理。JPA会自动帮我们生成对应的sql语句。
+
+# 四、总结
+
+关于SpringBoot操作数据的入门就介绍到这里，关于更多的高级操作可能后续再做讲解。

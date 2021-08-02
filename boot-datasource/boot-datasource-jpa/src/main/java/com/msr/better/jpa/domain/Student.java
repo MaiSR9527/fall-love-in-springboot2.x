@@ -1,5 +1,7 @@
 package com.msr.better.jpa.domain;
 
+import com.msr.better.jpa.constants.GenderEnum;
+import com.msr.better.jpa.converter.GengerConverter;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -17,6 +19,7 @@ public class Student {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-    private Integer gender;
+    @Convert(converter = GengerConverter.class)
+    private GenderEnum gender;
     private Integer age;
 }
