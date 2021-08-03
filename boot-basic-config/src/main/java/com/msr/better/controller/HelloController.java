@@ -1,5 +1,6 @@
 package com.msr.better.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,5 +22,10 @@ public class HelloController {
             list.add("hello:" + i);
         }
         return list;
+    }
+
+    @GetMapping("/port")
+    public int getPort(@Value("${server.port}")Integer port) {
+        return port;
     }
 }
