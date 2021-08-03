@@ -17,6 +17,7 @@
         <module>boot-basic-config</module>
         <module>boot-datasource/boot-datasource-jpa</module>
         <module>boot-datasource/boot-datasource-mybatis</module>
+        <module>boot-test-deploy</module>
     </modules>
 
     <parent>
