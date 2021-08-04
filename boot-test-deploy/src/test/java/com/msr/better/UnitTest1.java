@@ -11,7 +11,7 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @since 2021-08-04 00:28:17
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest
+@SpringBootTest(classes = {TestDeployApplication.class})
 public class UnitTest1 {
 
     @BeforeClass
@@ -41,8 +41,7 @@ public class UnitTest1 {
 
     @Test
     public void test2() {
-        System.out.println("test2") ;
+        Assert.assertEquals("wwwwwwww",1,2);
+        System.out.println("test2");
     }
-
-
 }
