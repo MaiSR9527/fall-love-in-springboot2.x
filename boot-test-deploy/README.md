@@ -36,6 +36,16 @@ tags: SpringBoot
 
 JUnit是一个Java语言的单元测试框架。它由Kent Beck和Erich Gamma建立，逐渐成为源于Kent Beck的sUnit的xUnit家族中最为成功的一个。 JUnit有它自己的JUnit扩展生态圈。多数Java的开发环境都已经集成了JUnit作为单元测试的工具。 
 
+| JUnit相关概念 | 含义                                                         |
+| ------------- | ------------------------------------------------------------ |
+| 测试          | 一个以@Test注释的方法定义一个测试，运行这个方法，JUnit会创建一个包含类的实例，然后再调用这个被注释的方法。 |
+| 测试类        | 包含多个@Test方法的一个类                                    |
+| Assert        | 定义想测试的条件，当条件成立时，assert 方法保持沉默，条件不成立时，则抛出异常 |
+| Suite         | Suite允许将测试类归类成一组                                  |
+| Runner        | Runner类用于运行测试，JUnit4是向后兼容的，可以运行JUnit3的测试实例 |
+
+这里使用的是JUnit4.x版本，JUnit中有两个重要的类Assume+Assert，以及重要的注解：BeforeClass、AfterClass、After、Before、Test和Ignore。BeforeClass和AfterClass在每个类的开始和结束的时候运行，需要static修饰方法。而Before和After则是在每个测试方法的开始和结束的时候运行。
+
 # 二、Spring Boot应用部署
 
 TODO
