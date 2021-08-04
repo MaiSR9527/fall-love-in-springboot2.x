@@ -1,6 +1,6 @@
 ---
 layout: springboot
-title: SpringBoot中的事务处理
+title: Spring中声明式事务的使用
 date: 2021-05-20 9:10:12
 categories: java
 tags: SpringBoot
@@ -325,4 +325,196 @@ public enum Propagation {
 
 # 五、Spring中的声明式事务的使用
 
-TODO
+在Spring中使用事务很简单，只需要在方法上添加`@Transactional`注解即可，Spring的事务管理帮我们做了如，在使用JDBC的时候的那些繁琐的try/catch代码。
+
+```java
+@Service
+public class StudentServiceImpl implements IStudentService {
+
+    ...
+        
+    @Transactional
+    @Override
+    public Student insertStudent(Student student) {
+        return studentRepository.save(student);
+    }
+
+    ...
+}
+```
+
+当Spring上下文开始调用被`@Transactional`修饰的方法或者类时，Spring就会产生AOP的功能，Spring中的事务管理是基于AOP的。当启动事务时，会根据事务定义器内的配置去设置事务，首先是根据传播行为来确定事务的策略，上一节说道，Spring中默认的传播行为是Propagation.REQUIRED(如果当前存在事务，则加入该事务，如果当前不存在事务，则创建一个新的事务)。然后是隔离级别、超时时间、只读内容等内容的设置，这些Spring中的事务管理器都有默认的设置，开发者只需要直接使用`@Transactional`注解即可，如果不满足也可以自行配置。
+
+通过`@Transactional`注解的属性配置去设置数据库的事务，在程序执行到开发者编写的程序事，如果发生异常，Spring数据库事务的流程中，它会根据是否发生异常来才去不同的策略。无论是否发生异常，Spring事务管理器会释放事务资源，这样就可以保证数据库连接的正常可用。这样就减少了
+
+## 5.1 @Transactional的配置属性
+
+我们来看一下`@Transactiona`注解的源码：
+
+```java
+@Target({ElementType.TYPE, ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Inherited
+@Documented
+public @interface Transactional {
+    // 通过bean name执行事务管理器
+    @AliasFor("transactionManager")
+    String value() default "";
+	// 同value属性
+    @AliasFor("value")
+    String transactionManager() default "";
+	// 指定事务传播行为，默认是Propagation.REQUIRED
+    Propagation propagation() default Propagation.REQUIRED;
+	// 指定事务的隔离级别，默认是使用底层数据存储的默认隔离级别。如MySQL是可重复读
+    Isolation isolation() default Isolation.DEFAULT;
+	// 指定超时时间，单位时间秒
+    int timeout() default -1;
+	// 是否是只读事务
+    boolean readOnly() default false;
+	// 在发生指定的异常是回滚事务，默认是所有异常都回滚
+    Class<? extends Throwable>[] rollbackFor() default {};
+	// 方法在发生指定异常名称时回滚事务，默认是所有异常都回滚
+    String[] rollbackForClassName() default {};
+	// 在发生指定的异常是不回滚事务
+    Class<? extends Throwable>[] noRollbackFor() default {};
+	// 方法在发生指定异常名称时不回滚事务
+    String[] noRollbackForClassName() default {};
+}
+```
+
+## 5.2 Spring的事务管理器
+
+Spring中的事务的打开、回滚和提交是由事务管理器来完成的。Spring中事务的顶层接口是TransactionManager这是个空接口，真正定义了方法的PlatformTransactionManager接口。当引入了其他框架的时候还会有其他的事务管理器的类，例如HibernateTransactionManager和JpaTransactionManager就是`spring-orm`这依赖里面，是Spring官方编写的提供的。如果引入的Redisson，还会有RedissonTransactionManager。最常用的就是DataSourceTransactionManger，它也是实现中用的最多的的事务管理器。
+
+![](https://cdn.jsdelivr.net/gh/MaiSR9527/blog-pic/spring/spring-transcation-manager.jpg)
+
+PlatformTransactionManager接口中只有三个方法，获取事务，提交事务和回滚事务。这是事务的最基本的。不同的事务管理就可以在此基础上实现自己的功能。例如在Spring Boot中引入了`spring-boot-starter-data-jpa`依赖之后，就会自动创建JpaTransactionManager作为事务管理器，所以一般是不需要我们自己创建事务管理器，除非有特定的需求。
+
+```java
+public interface PlatformTransactionManager extends TransactionManager {
+	// 获取事务m还可以设置数据属性
+	TransactionStatus getTransaction(@Nullable TransactionDefinition definition)
+			throws TransactionException;
+	// 提交事务
+	void commit(TransactionStatus status) throws TransactionException;
+	// 回滚事务
+	void rollback(TransactionStatus status) throws TransactionException;
+
+}
+```
+
+## 5.3 配置事务的传播行为和隔离级别
+
+现在配置测试一下BatchServiceImpl调用StudentServiceImpl的方法。
+
+**插入一个Student**
+
+```java
+@Service
+public class StudentServiceImpl implements IStudentService {
+
+    @Autowired
+    private StudentRepository studentRepository;
+
+    @Transactional(rollbackFor = RuntimeException.class, isolation = Isolation.REPEATABLE_READ, propagation = Propagation.REQUIRES_NEW)
+    @Override
+    public Student insertStudent(Student student) {
+        return studentRepository.save(student);
+    }
+
+}
+```
+
+**批量插入**
+
+```java
+@Service
+public class BatchServiceImpl implements IBatchService {
+
+    @Autowired
+    private IStudentService studentService;
+
+    @Transactional(rollbackFor = RuntimeException.class, isolation = Isolation.REPEATABLE_READ, propagation = Propagation.REQUIRED)
+    @Override
+    public void batchInsertStudent(List<Student> students) {
+        for (Student student : students) {
+            studentService.insertStudent(student);
+        }
+    }
+}
+```
+
+batchInsertStudent方法使用Propagation.REQUIRED的传播行为，数据库隔离级别使用REPEATABLE_READ。调用的insertStudent方法，其传播行为是REQUIRES_NEW，被调用时会新开一个事务。
+
+
+
+**关于@Transactional自调用，传播行为失效的问题**
+
+如下代码，在同一个类中相互调用的方法，会导致@Transactional中定义的传播行为失效。在自调用的过程中，是类的自身的调用，而不是代理对象去调用，那么就不会产生AOP，这样自调用就不会被事务管理器管理，就不能把代码织入到约定的流程中。像一个service调用另外一个service的，这样就是代理对象的调用，Spring才把代码织入到AOP的流程中。
+
+```java
+@Service
+public class StudentServiceImpl implements IStudentService {
+
+    @Autowired
+    private StudentRepository studentRepository;
+
+    @Transactional(rollbackFor = RuntimeException.class, propagation = Propagation.REQUIRES_NEW)
+    @Override
+    public Student findStudentById(Long id) {
+        return studentRepository.getOne(id);
+    }
+
+    @Transactional(rollbackFor = RuntimeException.class, isolation = Isolation.REPEATABLE_READ)
+    @Override
+    public void deleteStudent(Long id) {
+        // 自调用
+        Student db = findStudentById(id);
+        if (db == null) {
+            throw new RuntimeException("数据不存在");
+        }
+        studentRepository.deleteById(id);
+    }
+
+}
+```
+
+**解决自调用是事务传播行为失效的问题**
+
+通过在Spring上下文中获取IStudentService对象，此时该对象就是个代理对象，这样通过代理对象去调用就可以出发传播行为了。
+
+```java
+@Service
+public class StudentServiceImpl implements IStudentService {
+
+    @Autowired
+    private StudentRepository studentRepository;
+    
+    // 注入Spring上下文对象
+    @Autowired
+    private ApplicationContext context;
+
+    @Transactional(rollbackFor = RuntimeException.class, propagation = Propagation.REQUIRES_NEW)
+    @Override
+    public Student findStudentById(Long id) {
+        return studentRepository.getOne(id);
+    }
+
+    @Transactional(rollbackFor = RuntimeException.class, isolation = Isolation.REPEATABLE_READ)
+    @Override
+    public void deleteStudent(Long id) {
+        // 从上下文中获取IStudentService
+        IStudentService studentService = context.getBean(IStudentService.class);
+        Student db = findStudentById(id);
+        if (db == null) {
+            throw new RuntimeException("数据不存在");
+        }
+        studentRepository.deleteById(id);
+    }
+
+}
+```
+
+# 六、总结
+
+本文从原生JDBC的事务管理开始到介绍数据库的隔离级别和Spring中的传播行为，最后使用Spring的声明式事务，其实在正常的使用中，Spring的声明式事务用起来很简单和简洁，这是Spring内部帮我们做好了很多的事情。
