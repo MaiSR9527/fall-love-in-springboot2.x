@@ -149,19 +149,188 @@ public class UnitTest1 {
 ## 2.3 对Service层代码测试
 
 ```java
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
+
+@RunWith(SpringRunner.class)
+@SpringBootTest
+@Transactional
+public class ServiceUnitTest {
+
+    @MockBean
+    private ThirdSystemService thirdSystemService;
+
+    @Autowired
+    private ISysUserService userService;
+
+    @Test
+    public void test1() {
+        Long expectResult = 100L;
+        given(thirdSystemService.develop()).willReturn(expectResult);
+        SysUser sysUser = userService.findById(expectResult);
+        System.out.println(sysUser.toString());
+    }
+}
 ```
 
+`@MockBean`可以获取在Spring下上文管理的Bean，但是`thirdSystemService`这个Bean并不是真的实列，而是通过`Mockito`工具创建的测试实例。通过`@MockBean`注解模拟出来的Bean，调用方法是不会真正的调用真正的方法，适用于在依赖了第三方的系统，然而第三方的系统的对接并没有实现完成，自己可以单独测试自己的业务代码。`willReturn(expectResult)`说明结果永远返回100L。
 
+## 2.5 测试MVC代码
 
+Spring Boot中还能单独测试Controller的代码，例如测试Controller中方法的参数绑定和校验之类的逻辑。可以通过`@WebMvcTest`注解来完成单元测试。
 
+```java
+@RunWith(SpringRunner.class)
+@WebMvcTest(SysUserController.class)
+public class ServiceUnitTest {
 
-## 2.4 MVC的测试
+    @Autowired
+    private MockMvc mockMvc;
 
+    @Test
+    public void test2() throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.get("/hello/{id}", 1L);
+        mockMvc.perform(requestBuilder)
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(MockMvcResultHandlers.print());
+    }
+}
+```
 
+>像Get方法传递参数
+>
+>```java
+>MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+>        .get("/hello/{id}", 1L)   // path变量
+>        .param("name", "hello");  // @RequestParam 获取变量。post请求也适用
+>```
+>
+>文件上传
+>
+>```java
+>@RunWith(SpringRunner.class)
+>@WebMvcTest(SysUserController.class)
+>public class ServiceUnitTest {
+>
+>    @Autowired
+>    private MockMvc mockMvc;
+>
+>    @Test
+>    public void test3() throws Exception {
+>        // 获取文件
+>        FileInputStream fileInputStream = new FileInputStream("文件路径");
+>        // 构建文件上传对象
+>        MockMultipartFile mockMultipartFile = new MockMultipartFile("file", fileInputStream);
+>        // 构建mock文件上传请求
+>        MockMultipartHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.multipart("/upload").file(mockMultipartFile);
+>        // 发送请求
+>        mockMvc.perform(requestBuilder)
+>                .andExpect(MockMvcResultMatchers.status().isOk())
+>                .andDo(MockMvcResultHandlers.print());
+>    }
+>}
+>```
+>
+>模拟Cookie和Session
+>
+>```java
+>@RunWith(SpringRunner.class)
+>@WebMvcTest(SysUserController.class)
+>public class ServiceUnitTest {
+>
+>    @Autowired
+>    private MockMvc mockMvc;
+>
+>    @Test
+>    public void test4() throws Exception {
+>        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+>                .get("index.html")
+>                .sessionAttr("name", "hello")
+>                .cookie(new Cookie("token", "123345"));
+>        mockMvc.perform(requestBuilder)
+>                .andExpect(MockMvcResultMatchers.status().isOk())
+>                .andDo(MockMvcResultHandlers.print());
+>
+>    }
+>}
+>```
+>
+>设置请求头
+>
+>```java
+>@RunWith(SpringRunner.class)
+>@WebMvcTest(SysUserController.class)
+>public class ServiceUnitTest {
+>
+>    @Autowired
+>    private MockMvc mockMvc;
+>
+>    @Test
+>    public void test5() throws Exception {
+>        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+>                .get("index.html")
+>                .content(MediaType.APPLICATION_JSON_VALUE) // 期望返回类型
+>                .contentType(MediaType.APPLICATION_JSON_VALUE) // 提交的内容类型
+>                .header("token", 1235); // 设置请求头
+>        mockMvc.perform(requestBuilder)
+>                .andExpect(MockMvcResultMatchers.status().isOk())
+>                .andDo(MockMvcResultHandlers.print());
+>
+>    }
+>}
+>```
 
-## 2.5 Mock测试
+## 2.6 比较返回结果
 
+`MockMvc`类的`perform`方法会返回一个`ResultAction`类，可以对结果进行一些操作(andExpect、andDo和andReturn)。
 
+```java
+@RunWith(SpringRunner.class)
+@WebMvcTest(SysUserController.class)
+public class ServiceUnitTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Test
+    public void test2() throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+                .get("/hello/{id}", 1L)
+                .param("name", "hello");
+
+        mockMvc.perform(requestBuilder)
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id", "id").value(2L));
+                .andDo(MockMvcResultHandlers.print());
+    }
+}
+```
+
+例如上面获取返回的JSON结果中的id字段的值，value是期望值，如果期望值与实际值不一样测试就会报错。
+
+也可以断言测试返回结果的View(视图)和Model(数据模型)是否是期望值
+
+```java
+@RunWith(SpringRunner.class)
+@WebMvcTest(SysUserController.class)
+public class ServiceUnitTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+                .get("/hello/{id}", 1L)
+                .param("name", "hello");
+
+        mockMvc.perform(requestBuilder)
+            	// 断言返回的试图
+                .andExpect(MockMvcResultMatchers.view().name("index.html"))
+            	// 断言返回的数据模型中的数据
+                .andExpect(MockMvcResultMatchers.model().attribute("id",1L))
+                .andDo(MockMvcResultHandlers.print());
+}
+```
+
+更多的结果断言可以在`MockMvcResultMatchers`类中找到，该类是请求结果的匹配的一个工具类。
 
 # 四、面向数据库的单元测试
 

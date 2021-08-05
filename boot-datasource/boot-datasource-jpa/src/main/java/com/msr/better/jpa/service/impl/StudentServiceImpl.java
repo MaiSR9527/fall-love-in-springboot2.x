@@ -1,7 +1,7 @@
 package com.msr.better.jpa.service.impl;
 
 import com.msr.better.jpa.dao.StudentRepository;
-import com.msr.better.jpa.domain.Student;
+import com.msr.better.jpa.entity.Student;
 import com.msr.better.jpa.service.IStudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;

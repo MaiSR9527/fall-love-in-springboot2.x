@@ -1,6 +1,6 @@
 package com.msr.better.jpa.dao;
 
-import com.msr.better.jpa.domain.Student;
+import com.msr.better.jpa.entity.Student;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;

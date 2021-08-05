@@ -1,6 +1,6 @@
 package com.msr.better.jpa.service;
 
-import com.msr.better.jpa.domain.Student;
+import com.msr.better.jpa.entity.Student;
 
 import java.util.List;
 

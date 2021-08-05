@@ -1,4 +1,4 @@
-package com.msr.better.jpa.domain;
+package com.msr.better.jpa.entity;
 
 import com.msr.better.jpa.constants.GenderEnum;
 import com.msr.better.jpa.converter.GengerConverter;

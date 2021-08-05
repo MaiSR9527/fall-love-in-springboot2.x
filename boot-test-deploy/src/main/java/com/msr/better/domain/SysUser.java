@@ -1,12 +1,20 @@
 package com.msr.better.domain;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
 /**
  * @author MaiShuRen
  * @site https://www.maishuren.top
  * @since 2021-08-04 00:30:29
  */
+@Entity
 public class SysUser {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String username;
     private Integer age;

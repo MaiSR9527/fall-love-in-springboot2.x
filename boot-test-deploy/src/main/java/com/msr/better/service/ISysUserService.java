@@ -9,7 +9,11 @@ import java.util.List;
  * @site https://www.maishuren.top
  * @since 2021-08-04 00:30:29
  */
-public interface ITestService {
+public interface ISysUserService {
 
     List<SysUser> listAll();
+
+    SysUser insert(SysUser user);
+
+    SysUser findById(Long id);
 }
