@@ -5,14 +5,14 @@ package com.msr.better.domain;
  * @site https://www.maishuren.top
  * @since 2021-08-04 00:30:29
  */
-public class SysUSer {
+public class SysUser {
 
     private Long id;
     private String username;
     private Integer age;
     private Integer gender;
 
-    public SysUSer() {
+    public SysUser() {
     }
 
     public Long getId() {
