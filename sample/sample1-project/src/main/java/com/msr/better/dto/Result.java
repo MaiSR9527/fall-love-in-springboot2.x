@@ -16,4 +16,5 @@ public class Result implements Serializable {
     private String msg;
     private Object data;
 
+
 }

@@ -1,5 +1,6 @@
 package com.msr.better.task;
 
+import com.msr.better.dao.GoodsMapper;
 import com.msr.better.domain.Goods;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;

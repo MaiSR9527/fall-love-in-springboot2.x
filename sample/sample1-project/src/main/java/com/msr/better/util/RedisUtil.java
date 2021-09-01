@@ -1066,5 +1066,20 @@ public class RedisUtil implements InitializingBean {
             close(jedis);
         }
     }
+    public Long llen(String key) {
+        Jedis jedis = null;
+        Object ret = null;
 
+        try {
+            jedis = this.getConnent();
+            Long var4 = jedis.llen(key);
+            return var4;
+        } catch (Exception var8) {
+            logger.error("redis llen data failed , key = " + key, var8);
+        } finally {
+            this.close(jedis);
+        }
+
+        return (Long)ret;
+    }
 }

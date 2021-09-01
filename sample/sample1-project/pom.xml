@@ -101,6 +101,16 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
+        <dependency>
+            <groupId>wang.moshu</groupId>
+            <artifactId>smvc-framework</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>wang.moshu</groupId>
+            <artifactId>mt-framework</artifactId>
+            <version>0.0.2</version>
+        </dependency>
 
     </dependencies>
 
