@@ -35,8 +35,7 @@ public class GoodsBuyCurrentLimiter extends CurrentLimiter<String> {
 
     @Override
     protected int getLimit(String goodsRandomName) {
-        return goodsMapper.selectByRandomName(goodsRandomName).getStore()
-                * CommonConstant.CurrentLimitMultiple.GOODS_BUY;
+        return goodsMapper.selectByRandomName(goodsRandomName).getStore() * CommonConstant.CurrentLimitMultiple.GOODS_BUY;
     }
 
     @Override
