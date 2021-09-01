@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @since 2021-09-01 22:08:54
  */
 public abstract class CacheWorker<P, R> {
-    private static Logger logger = LoggerFactory.getLogger(CacheWorker.class);
+    private static final Logger logger = LoggerFactory.getLogger(CacheWorker.class);
 
     @Autowired
     protected RedisUtil redisUtil;
@@ -21,10 +21,8 @@ public abstract class CacheWorker<P, R> {
     /**
      * get方式获取缓存
      *
-     * @param params        查询参数
-     * @param expireSeconds 缓存过期时间
+     * @param params 查询参数
      * @return 结果
-     * @throws SQLException
      */
     @SuppressWarnings("unchecked")
     public R get(P params, Class<R> clazz) {

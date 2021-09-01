@@ -1,11 +1,10 @@
 package com.msr.better.mq;
 
+import com.msr.better.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
-import wang.moshu.message.Message;
-import wang.moshu.message.RedisUtil;
 
 /**
  * @author MaiShuRen

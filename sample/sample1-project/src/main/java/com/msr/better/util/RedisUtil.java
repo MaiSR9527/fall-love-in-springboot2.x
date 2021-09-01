@@ -2,7 +2,7 @@ package com.msr.better.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
+import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -14,7 +14,8 @@ import java.util.*;
  * @site https://www.maishuren.top
  * @since 2021-09-01 21:19:52
  */
-public class RedisUtil implements InitializingBean {
+@Component
+public class RedisUtil {
 
     /**
      * 日志
@@ -120,7 +121,7 @@ public class RedisUtil implements InitializingBean {
     /**
      * 初始化redisUtil实例，配置连接池
      */
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
 
         JedisPoolConfig config = new JedisPoolConfig();
 
@@ -137,29 +138,24 @@ public class RedisUtil implements InitializingBean {
 
     /**
      * 从连接池获得一个redis连接
-     *
-     * @return
      */
-    public Jedis getConnent() {
-        Jedis jedis = pool.getResource();
-        return jedis;
+    public Jedis getConnection() {
+        return pool.getResource();
     }
 
     /**
      * 向redis中存入数据
      *
-     * @param key    键值
-     * @param object 数据
-     * @return
+     * @param keyPattern 键值
      */
     public Set<String> keys(String keyPattern) {
         Jedis jedis = null;
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             return jedis.keys(keyPattern);
         } catch (Exception e) {
             logger.error("redis keys failed!", e);
-            return new HashSet<String>();
+            return new HashSet<>();
         } finally {
             close(jedis);
         }
@@ -170,12 +166,11 @@ public class RedisUtil implements InitializingBean {
      *
      * @param key    键值
      * @param object 数据
-     * @return
      */
-    public <T> boolean set(String key, T object, int seconds) {
+    public <T> void set(String key, T object, int seconds) {
         Jedis jedis = null;
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             if (seconds > 0) {
                 jedis.setex(key.getBytes(), seconds, ConvertUtil.serialize(object));
             } else {
@@ -183,11 +178,9 @@ public class RedisUtil implements InitializingBean {
             }
         } catch (Exception e) {
             logger.error("redis set data failed!", e);
-            return false;
         } finally {
             close(jedis);
         }
-        return true;
     }
 
     /**
@@ -195,7 +188,6 @@ public class RedisUtil implements InitializingBean {
      *
      * @param key    键值
      * @param object 数据
-     * @return
      */
     public boolean hset(String key, String fieldName, Object object) {
         return hset(key, fieldName, object, -1);
@@ -204,14 +196,14 @@ public class RedisUtil implements InitializingBean {
     /**
      * 向redis中存入数据
      *
-     * @param key    键值
-     * @param object 数据
-     * @return
+     * @param key     键值
+     * @param object  数据
+     * @param seconds 过期时间
      */
     public <T> boolean hset(String key, String fieldName, T object, int seconds) {
         Jedis jedis = null;
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             jedis.hset(key.getBytes(), fieldName.getBytes(), ConvertUtil.serialize(object));
             if (seconds > 0)
                 jedis.expire(key.getBytes(), seconds);
@@ -229,12 +221,11 @@ public class RedisUtil implements InitializingBean {
      *
      * @param key    键值
      * @param object 数据
-     * @return
      */
     public <T> boolean hdel(String key, String fieldName) {
         Jedis jedis = null;
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             jedis.hdel(key.getBytes(), fieldName.getBytes());
         } catch (Exception e) {
             logger.error("redis hset data failed!", e);
@@ -248,14 +239,13 @@ public class RedisUtil implements InitializingBean {
     /**
      * 获取数据
      *
-     * @param key
-     * @return
+     * @param key 键值
      */
     public <T> T hget(String key, String fieldName, Class<T> clazz) {
         Jedis jedis = null;
 
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             return ConvertUtil.unserialize(jedis.hget(key.getBytes(), fieldName.getBytes()), clazz);
         } catch (Exception e) {
             logger.error("redis hget data failed!", e);
@@ -270,10 +260,9 @@ public class RedisUtil implements InitializingBean {
      *
      * @param key    键值
      * @param object 数据
-     * @return
      */
-    public <T> boolean set(String key, T object) {
-        return set(key, object, -1);
+    public <T> void set(String key, T object) {
+        set(key, object, -1);
     }
 
     /**
@@ -286,7 +275,7 @@ public class RedisUtil implements InitializingBean {
         Jedis jedis = null;
 
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             byte[] value = jedis.get(key.getBytes());
 
             if (value != null) {
@@ -312,7 +301,7 @@ public class RedisUtil implements InitializingBean {
         Jedis jedis = null;
 
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             return jedis.ttl(key.getBytes());
 
         } catch (Exception e) {
@@ -332,7 +321,7 @@ public class RedisUtil implements InitializingBean {
     public boolean delete(String key) {
         Jedis jedis = null;
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             jedis.del(key);
         } catch (Exception e) {
             logger.error("redis delete data failed!", e);
@@ -346,7 +335,7 @@ public class RedisUtil implements InitializingBean {
     /**
      * 删除redis中key对应数据
      *
-     * @param key
+     * @param key 键值
      * @return 删除的条数
      */
     public long deleteRegEx(String key) {
@@ -354,7 +343,7 @@ public class RedisUtil implements InitializingBean {
         long count = 0;
 
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             Set<String> keys = jedis.keys(key);
 
             if (keys == null || keys.isEmpty()) {
@@ -385,7 +374,7 @@ public class RedisUtil implements InitializingBean {
         Jedis jedis = null;
         Long ret = null;
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             byte[] bytes = ConvertUtil.serialize(value);
             ret = jedis.lpush(key.getBytes(), bytes);
 
@@ -405,7 +394,7 @@ public class RedisUtil implements InitializingBean {
     public void lpushStr(String key, String value, int second) {
         Jedis jedis = null;
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             jedis.lpush(key, value);
 
             if (second > 0) {
@@ -428,7 +417,7 @@ public class RedisUtil implements InitializingBean {
         Jedis jedis = null;
 
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             return jedis.hmset(key, mapData);
         } catch (Exception e) {
             logger.error("redis set map data failed! map = " + mapData, e);
@@ -450,7 +439,7 @@ public class RedisUtil implements InitializingBean {
         Jedis jedis = null;
 
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             dataMap = jedis.hgetAll(key);
         } catch (Exception e) {
             logger.error("redis get map data failed! ", e);
@@ -487,7 +476,7 @@ public class RedisUtil implements InitializingBean {
     public <T> List<T> lrange(String key, int start, int end, Class<T> clazz) {
         Jedis jedis = null;
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             return ConvertUtil.unserialize(jedis.lrange(key.getBytes(), start, end), clazz);
         } catch (Exception e) {
             logger.error("redis lrange data failed , key = " + key, e);
@@ -524,7 +513,7 @@ public class RedisUtil implements InitializingBean {
     public boolean zincrby(String key, double score, Object object) {
         Jedis jedis = null;
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             jedis.zincrby(key, score, object.toString());
         } catch (Exception e) {
             logger.error("redis zadd data failed!", e);
@@ -545,7 +534,7 @@ public class RedisUtil implements InitializingBean {
     public boolean zadd(String key, double score, Object object) {
         Jedis jedis = null;
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             jedis.zadd(key, score, object.toString());
         } catch (Exception e) {
             logger.error("redis zadd data failed!", e);
@@ -566,7 +555,7 @@ public class RedisUtil implements InitializingBean {
     public boolean zadd(String key, Map<String, Double> scoreMembers, int seconds) {
         Jedis jedis = null;
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             jedis.zadd(key, scoreMembers);
             if (seconds > 0) {
                 jedis.expire(key, seconds);
@@ -590,7 +579,7 @@ public class RedisUtil implements InitializingBean {
         Jedis jedis = null;
 
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             return jedis.zcount(key, minScore, maxScore);
         } catch (Exception e) {
             logger.error("redis get data failed!", e);
@@ -614,7 +603,7 @@ public class RedisUtil implements InitializingBean {
         Jedis jedis = null;
 
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             return jedis.zrem(key, members);
         } catch (Exception e) {
             logger.error("redis zrem data failed!", e);
@@ -639,7 +628,7 @@ public class RedisUtil implements InitializingBean {
         Jedis jedis = null;
 
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             return jedis.zremrangeByLex(key, "[" + minValue, "[" + maxValue);
         } catch (Exception e) {
             logger.error("redis get data failed!", e);
@@ -743,7 +732,7 @@ public class RedisUtil implements InitializingBean {
         Jedis jedis = null;
 
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             if (offset > -1 && count > 0) {
                 return jedis.zrangeByScore(key, minScore, maxScore, offset, count);
             } else {
@@ -769,7 +758,7 @@ public class RedisUtil implements InitializingBean {
         Jedis jedis = null;
 
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             return jedis.zrangeByScore(key, minScore, maxScore);
         } catch (Exception e) {
             logger.error("redis get data failed!", e);
@@ -875,7 +864,7 @@ public class RedisUtil implements InitializingBean {
         Jedis jedis = null;
 
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             if (offset > -1 && count > 0) {
                 return jedis.zrevrangeByScore(key, maxScore, minScore, offset, count);
             } else {
@@ -901,7 +890,7 @@ public class RedisUtil implements InitializingBean {
         Jedis jedis = null;
 
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             return jedis.zrevrangeByScore(key, maxScore, minScore);
         } catch (Exception e) {
             logger.error("redis get data failed!", e);
@@ -923,7 +912,7 @@ public class RedisUtil implements InitializingBean {
         Jedis jedis = null;
 
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             return jedis.zremrangeByScore(key, maxScore, minScore);
         } catch (Exception e) {
             logger.error("redis get data failed!", e);
@@ -943,7 +932,7 @@ public class RedisUtil implements InitializingBean {
         Jedis jedis = null;
 
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             return jedis.exists(key);
         } catch (Exception e) {
             logger.error("redis get data failed!", e);
@@ -981,7 +970,7 @@ public class RedisUtil implements InitializingBean {
         Jedis jedis = null;
 
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             return jedis.expire(key.getBytes(), seconds);
         } catch (Exception e) {
             logger.error("redis get data failed!", e);
@@ -1001,7 +990,7 @@ public class RedisUtil implements InitializingBean {
         Jedis jedis = null;
 
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             Long res = jedis.setnx(key, object.toString());
             if (new Long(1L).equals(res)) {
                 // 设定过期时间，最多30秒自动过期，防止长期死锁发生
@@ -1037,7 +1026,7 @@ public class RedisUtil implements InitializingBean {
         Jedis jedis = null;
 
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             return jedis.incr(key);
         } catch (Exception e) {
             logger.error("redis get data failed!", e);
@@ -1057,7 +1046,7 @@ public class RedisUtil implements InitializingBean {
         Jedis jedis = null;
 
         try {
-            jedis = getConnent();
+            jedis = getConnection();
             return jedis.decr(key);
         } catch (Exception e) {
             logger.error("redis get data failed!", e);
@@ -1066,12 +1055,13 @@ public class RedisUtil implements InitializingBean {
             close(jedis);
         }
     }
+
     public Long llen(String key) {
         Jedis jedis = null;
         Object ret = null;
 
         try {
-            jedis = this.getConnent();
+            jedis = this.getConnection();
             Long var4 = jedis.llen(key);
             return var4;
         } catch (Exception var8) {
@@ -1080,6 +1070,45 @@ public class RedisUtil implements InitializingBean {
             this.close(jedis);
         }
 
-        return (Long)ret;
+        return (Long) ret;
+    }
+
+    public <T> T blpop(String key, int waitSeconds, Class<T> clazz) {
+        Jedis jedis = null;
+
+        T var6;
+        try {
+            jedis = this.getConnection();
+            List<byte[]> values = jedis.brpop(waitSeconds, new byte[][]{key.getBytes()});
+            if (values != null && values.size() > 0) {
+                byte[] value = values.get(1);
+                return ConvertUtil.unserialize(value, clazz);
+            }
+            return null;
+        } catch (Exception var11) {
+            logger.error("redis get data failed!", var11);
+        } finally {
+            this.close(jedis);
+        }
+
+        return null;
+    }
+
+    public <T> void rpush(String key, T value, int second) {
+        Jedis jedis = null;
+        Long ret = null;
+
+        try {
+            jedis = this.getConnection();
+            byte[] bytes = ConvertUtil.serialize(value);
+            jedis.rpush(key.getBytes(), new byte[][]{bytes});
+            if (second > 0) {
+                jedis.expire(key, second);
+            }
+        } catch (Exception var10) {
+            logger.error("redis lpush data failed , key = " + key, var10);
+        } finally {
+            this.close(jedis);
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.msr.better.interceptor;
 
+import com.msr.better.cache.UserBlackListCache;
 import com.msr.better.config.BlackListProperties;
 import com.msr.better.exception.BusinessException;
 import com.msr.better.util.RedisUtil;

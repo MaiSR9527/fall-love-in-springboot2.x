@@ -1,11 +1,12 @@
 package com.msr.better.task;
 
+import com.msr.better.cache.GoodsRedisStoreCache;
 import com.msr.better.dao.GoodsMapper;
 import com.msr.better.domain.Goods;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -17,11 +18,13 @@ import java.util.List;
  */
 @Component
 public class GoodsRedisStoreInitTask {
-    @Autowired
+    private final GoodsRedisStoreCache goodsRedisStore;
+    @Resource
     private GoodsMapper goodsMapper;
 
-    @Autowired
-    private GoodsRedisStoreCache goodsRedisStore;
+    public GoodsRedisStoreInitTask(GoodsRedisStoreCache goodsRedisStore) {
+        this.goodsRedisStore = goodsRedisStore;
+    }
 
     /**
      * 每隔1分钟触发一次

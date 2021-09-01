@@ -1,11 +1,11 @@
 package com.msr.better.mq;
 
+import com.msr.better.util.RedisUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.TaskRejectedException;
 import org.springframework.stereotype.Component;
-import wang.moshu.message.RedisUtil;
 
 import javax.annotation.PostConstruct;
 
@@ -17,12 +17,12 @@ import javax.annotation.PostConstruct;
 @Component
 public abstract class AbstractMessageHandler<T> implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(AbstractMessageHandler.class);
+    private final String messageType;
+    private final Class<T> clazz;
     @Autowired
     protected MessageTrunk messageTrunk;
     @Autowired
     private RedisUtil redisUtil;
-    private String messageType;
-    private Class<T> clazz;
     private boolean monitor;
     private int retryTimes = 3;
 
@@ -68,35 +68,30 @@ public abstract class AbstractMessageHandler<T> implements Runnable {
             }
 
             try {
-                this.messageTrunk.getThreadPool().submit(new Runnable() {
-                    public void run() {
-                        Message message = obj;
+                this.messageTrunk.getThreadPool().submit(() -> {
 
-                        try {
-                            this.handle(message.getContent());
-                        } catch (Exception var4) {
-                            AbstractMessageHandler.logger.error(var4);
-                            if (message.getFailTimes() >= AbstractMessageHandler.this.retryTimes) {
-                                AbstractMessageHandler.this.handleFailed(message.getContent());
-                            } else {
-                                message.setFailTimes(message.getFailTimes() + 1);
-                                AbstractMessageHandler.this.messageTrunk.put(message);
-                                if (AbstractMessageHandler.logger.isDebugEnabled()) {
-                                    StringBuilder sb = new StringBuilder();
-                                    sb.append("msg:[").append(message).append("], 执行失败，准备重试。");
-                                    AbstractMessageHandler.logger.debug(sb.toString());
-                                }
+                    try {
+                        handle((T) obj.getContent());
+                    } catch (Exception var4) {
+                        AbstractMessageHandler.logger.error(String.valueOf(var4));
+                        if (obj.getFailTimes() >= AbstractMessageHandler.this.retryTimes) {
+                            handleFailed((T) obj.getContent());
+                        } else {
+                            obj.setFailTimes(obj.getFailTimes() + 1);
+                            AbstractMessageHandler.this.messageTrunk.put(obj);
+                            if (AbstractMessageHandler.logger.isDebugEnabled()) {
+                                AbstractMessageHandler.logger.debug("msg:[" + obj + "], 执行失败，准备重试。");
                             }
                         }
-
                     }
+
                 });
             } catch (TaskRejectedException var6) {
                 logger.warn("线程池已满，准备回写任务，暂停本线程");
                 this.messageTrunk.put(obj);
 
                 try {
-                    Thread.sleep((long) (this.messageTrunk.getThreadPoolFullSleepSeconds() * 1000));
+                    Thread.sleep(this.messageTrunk.getThreadPoolFullSleepSeconds() * 1000L);
                 } catch (InterruptedException var5) {
                     logger.warn("生产者暂停异常", var6);
                 }

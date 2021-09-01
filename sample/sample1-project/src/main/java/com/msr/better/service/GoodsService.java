@@ -1,15 +1,22 @@
 package com.msr.better.service;
 
+import com.msr.better.cache.*;
+import com.msr.better.constant.MessageType;
 import com.msr.better.dao.GoodsMapper;
 import com.msr.better.domain.Goods;
 import com.msr.better.exception.BusinessException;
+import com.msr.better.mq.Message;
 import com.msr.better.mq.MessageTrunk;
+import com.msr.better.mq.MiaoshaRequestMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import sun.plugin2.message.Message;
 
+import javax.annotation.Resource;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author MaiShuRen
@@ -18,7 +25,7 @@ import java.util.List;
  */
 @Service
 public class GoodsService {
-    @Autowired
+    @Resource
     private GoodsMapper goodsMapper;
 
     @Autowired
@@ -40,9 +47,9 @@ public class GoodsService {
     private GoodsInfoCacheWorker goodsInfoCacheWorker;
 
     /**
-     * 根据goodsid获取随机名称(这样确保前端用户不能提前知道秒杀链接，降低被刷风险)
+     * 根据goodsId获取随机名称(这样确保前端用户不能提前知道秒杀链接，降低被刷风险)
      *
-     * @param goodsId
+     * @param goodsId 商品id
      */
     public String getGoodsRandomName(Integer goodsId) {
         Goods goods = goodsInfoCacheWorker.get(goodsId, Goods.class);
@@ -59,10 +66,7 @@ public class GoodsService {
     /**
      * 获取抢购商品列表
      *
-     * @return
-     * @category 获取抢购商品列表
-     * @author xiangyong.ding@weimob.com
-     * @since 2017年5月1日 下午9:40:50
+     * @return 结果
      */
     public List<Goods> getGoodsList() {
         return goodsMapper.selectAll();
@@ -71,11 +75,8 @@ public class GoodsService {
     /**
      * 获取商品详情
      *
-     * @param goodsId
-     * @return
-     * @category 获取商品详情
-     * @author xiangyong.ding@weimob.com
-     * @since 2017年5月1日 下午9:59:21
+     * @param goodsId 商品id
+     * @return 商品
      */
     public Goods getDetail(Integer goodsId) {
         return goodsMapper.selectByPrimaryKey(goodsId);
@@ -84,10 +85,8 @@ public class GoodsService {
     /**
      * 做秒杀操作
      *
-     * @param goodsId
-     * @return
-     * @category @author xiangyong.ding@weimob.com
-     * @since 2017年3月15日 下午5:11:02
+     * @param mobile          手机号
+     * @param goodsRandomName 商品名
      */
     public void miaosha(String mobile, String goodsRandomName) {
         // 先看抢购是否已经结束了
@@ -99,12 +98,12 @@ public class GoodsService {
         goodsBuyCurrentLimiter.doLimit(goodsRandomName, "啊呀，没挤进去");
 
         // 判断是否处理中(是否在处理列表中)
-        if (miaoshaHandlingListCache.isInHanleList(mobile, goodsRandomName)) {
+        if (miaoshaHandlingListCache.isInHandleList(mobile, goodsRandomName)) {
             throw new BusinessException("您已经提交过抢购，如果抢购成功请下单，否则耐心等待哦...");
         }
 
         // 请求消息推入处理队列，结束
-        Message message = new Message(MessageType.MIAOSHA_MESSAGE, new MiaoshaRequestMessage(mobile, goodsRandomName));
+        Message message = new Message(MessageType.SPIKE_MESSAGE, new MiaoshaRequestMessage(mobile, goodsRandomName));
         messageTrunk.put(message);
 
         // 加入正在处理列表
@@ -114,7 +113,7 @@ public class GoodsService {
 
     private Goods checkStore(String goodsRandomName) {
         Goods goods = goodsMapper.selectByRandomName(goodsRandomName);
-        if (goods == null || goods.getStore().intValue() <= 0) {
+        if (goods == null || goods.getStore() <= 0) {
             miaoshaFinishCache.setFinish(goodsRandomName);
             throw new RuntimeException("很遗憾，抢购已经结束了哟"); // 库存不足，抢购失败
         }
@@ -125,13 +124,11 @@ public class GoodsService {
      * 真正做减库存操作(这里没有采用存储过程的原因：这里并没有高并发，高并发已经在获取token时分流，所以此处没必要用存储过程)
      *
      * @param goodsId
-     * @category 真正做减库存操作
-     * @author xiangyong.ding@weimob.com
      * @since 2017年3月20日 下午2:17:42
      */
     public Integer reduceStoreAndCreateOrder(String mobile, Integer goodsId) {
         Date orderTime = new Date();
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put("goodsId", goodsId);
         map.put("mobile", mobile);
         map.put("orderTime", orderTime);
@@ -152,10 +149,7 @@ public class GoodsService {
      * 真正的减库存、下单操作
      *
      * @param goodsId
-     * @return
-     * @category 真正的减库存、下单操作
-     * @author xiangyong.ding@weimob.com
-     * @since 2017年4月12日 下午11:03:04
+     * @return 订单号
      */
     public Integer order(String mobile, Integer goodsId, String token) {
         // 先检查token有效性

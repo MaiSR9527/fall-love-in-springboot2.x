@@ -1,8 +1,10 @@
 package com.msr.better.controller;
 
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.msr.better.cache.MiaoshaSuccessTokenCache;
+import com.msr.better.service.GoodsService;
 import org.springframework.util.Assert;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,20 +19,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/spike/")
 public class SpikeController {
-    @Autowired
-    private GoodsService goodsService;
+    private final GoodsService goodsService;
 
-    @Autowired
-    private MiaoshaSuccessTokenCache miaoshaSuccessTokenCache;
+    private final MiaoshaSuccessTokenCache miaoshaSuccessTokenCache;
+
+    public SpikeController(GoodsService goodsService, MiaoshaSuccessTokenCache miaoshaSuccessTokenCache) {
+        this.goodsService = goodsService;
+        this.miaoshaSuccessTokenCache = miaoshaSuccessTokenCache;
+    }
 
     /**
      * 秒杀接口
      *
-     * @param mobile
-     * @param goodsRandomName
+     * @param mobile          用户标识
+     * @param goodsRandomName 商品标识
      * @return
      */
-    @Intercept(value = {UserInterceptor.class})
+//    @Intercept(value = {UserInterceptor.class})
     // @Intercept(value = { ExecuteTimeInterceptor.class })
     @RequestMapping(value = "miaosha")
     public String miaosha(String mobile, String goodsRandomName) {
@@ -50,7 +55,7 @@ public class SpikeController {
      * @return
      */
     @RequestMapping(value = "{goodsId}/getMiaoshaGoodsLink")
-    public String getMiaoshaGoodsLink(Integer goodsId) {
+    public String getMiaoshaGoodsLink(@PathVariable Integer goodsId) {
         return goodsService.getGoodsRandomName(goodsId);
     }
 
@@ -70,9 +75,9 @@ public class SpikeController {
     /**
      * 下单
      *
-     * @param mobile
-     * @param goodsId
-     * @param token
+     * @param mobile  用户标识
+     * @param goodsId 商品id
+     * @param token   token
      */
     @RequestMapping(value = "order")
     public Integer order(String mobile, Integer goodsId, String token) {
@@ -82,8 +87,7 @@ public class SpikeController {
     /**
      * 查询系统时间
      *
-     * @return
-     * @category 查询系统时间
+     * @return 系统时间
      */
     @RequestMapping(value = "time/now")
     @ResponseBody
