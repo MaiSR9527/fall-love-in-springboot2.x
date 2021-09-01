@@ -18,6 +18,7 @@
         <module>boot-datasource/boot-datasource-jpa</module>
         <module>boot-datasource/boot-datasource-mybatis</module>
         <module>boot-test-deploy</module>
+        <module>sample/sample1-project</module>
     </modules>
 
     <parent>
