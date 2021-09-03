@@ -15,7 +15,7 @@ import java.text.MessageFormat;
  * @since 2021-09-01 23:29:42
  */
 @Component
-public class MiaoshaFinishCache {
+public class SpikeFinishCache {
 
     @Autowired
     private RedisUtil redisUtil;

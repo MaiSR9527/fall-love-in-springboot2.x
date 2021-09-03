@@ -18,16 +18,16 @@ import java.util.UUID;
  * @since 2021-09-01 23:30:13
  */
 @Component
-public class MiaoshaSuccessTokenCache {
+public class SpikeSuccessTokenCache {
 
     private final RedisUtil redisUtil;
 
     private final GoodsRedisStoreCache goodsRedisStoreCache;
 
-    private final MiaoshaHandlingListCache miaoshaHandlingListCache;
+    private final SpikeHandlingListCache spikeHandlingListCache;
 
-    public MiaoshaSuccessTokenCache(MiaoshaHandlingListCache miaoshaHandlingListCache, GoodsRedisStoreCache goodsRedisStoreCache, RedisUtil redisUtil) {
-        this.miaoshaHandlingListCache = miaoshaHandlingListCache;
+    public SpikeSuccessTokenCache(SpikeHandlingListCache spikeHandlingListCache, GoodsRedisStoreCache goodsRedisStoreCache, RedisUtil redisUtil) {
+        this.spikeHandlingListCache = spikeHandlingListCache;
         this.goodsRedisStoreCache = goodsRedisStoreCache;
         this.redisUtil = redisUtil;
     }
@@ -90,7 +90,7 @@ public class MiaoshaSuccessTokenCache {
             // 如果token存在，且是过期的，则回馈redis库存
             goodsRedisStoreCache.incrStore(goodsRandomName);
 
-            miaoshaHandlingListCache.removeFromHanleList(mobile, goodsRandomName);
+            spikeHandlingListCache.removeFromHanleList(mobile, goodsRandomName);
         }
 
         return false;

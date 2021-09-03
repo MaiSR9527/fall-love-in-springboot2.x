@@ -12,11 +12,11 @@ import org.springframework.stereotype.Component;
  * @since 2021-09-01 23:29:59
  */
 @Component
-public class MiaoshaHandlingListCache {
+public class SpikeHandlingListCache {
 
     private final RedisUtil redisUtil;
 
-    public MiaoshaHandlingListCache(RedisUtil redisUtil) {
+    public SpikeHandlingListCache(RedisUtil redisUtil) {
         this.redisUtil = redisUtil;
     }
 

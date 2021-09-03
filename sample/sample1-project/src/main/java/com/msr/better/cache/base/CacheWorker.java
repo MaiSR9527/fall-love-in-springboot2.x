@@ -98,7 +98,6 @@ public abstract class CacheWorker<P, R> {
      *
      * @param params
      * @return
-     * @throws SQLException
      */
     protected abstract R getDataWhenNoCache(P params);
 

@@ -1,6 +1,6 @@
 package com.msr.better.task;
 
-import com.msr.better.cache.MiaoshaSuccessTokenCache;
+import com.msr.better.cache.SpikeSuccessTokenCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -17,17 +17,17 @@ import java.util.Set;
 @Component
 public class GoodsTokenExpireClearTask {
     @Autowired
-    private MiaoshaSuccessTokenCache miaoshaSuccessTokenCache;
+    private SpikeSuccessTokenCache spikeSuccessTokenCache;
 
     /**
      * 每隔1分钟触发一次
      */
     @Scheduled(cron = "0 0/1 * * * ? ")
     public void doClear() {
-        Set<String> keys = miaoshaSuccessTokenCache.getAllToken();
+        Set<String> keys = spikeSuccessTokenCache.getAllToken();
         for (String key : keys) {
             //验证token是否过期，过期了自动释放redis库存
-            miaoshaSuccessTokenCache.validateTokenByKey(key);
+            spikeSuccessTokenCache.validateTokenByKey(key);
         }
     }
 

@@ -32,16 +32,16 @@ public class GoodsService {
     private GoodsBuyCurrentLimiter goodsBuyCurrentLimiter;
 
     @Autowired
-    private MiaoshaSuccessTokenCache miaoshaSuccessTokenCache;
+    private SpikeSuccessTokenCache spikeSuccessTokenCache;
 
     @Autowired
     private MessageTrunk messageTrunk;
 
     @Autowired
-    private MiaoshaFinishCache miaoshaFinishCache;
+    private SpikeFinishCache spikeFinishCache;
 
     @Autowired
-    private MiaoshaHandlingListCache miaoshaHandlingListCache;
+    private SpikeHandlingListCache spikeHandlingListCache;
 
     @Autowired
     private GoodsInfoCacheWorker goodsInfoCacheWorker;
@@ -88,9 +88,9 @@ public class GoodsService {
      * @param mobile          手机号
      * @param goodsRandomName 商品名
      */
-    public void miaosha(String mobile, String goodsRandomName) {
+    public void spike(String mobile, String goodsRandomName) {
         // 先看抢购是否已经结束了
-        if (miaoshaFinishCache.isFinish(goodsRandomName)) {
+        if (spikeFinishCache.isFinish(goodsRandomName)) {
             throw new BusinessException("您已经提交抢购，正在处理中");
         }
 
@@ -98,7 +98,7 @@ public class GoodsService {
         goodsBuyCurrentLimiter.doLimit(goodsRandomName, "啊呀，没挤进去");
 
         // 判断是否处理中(是否在处理列表中)
-        if (miaoshaHandlingListCache.isInHandleList(mobile, goodsRandomName)) {
+        if (spikeHandlingListCache.isInHandleList(mobile, goodsRandomName)) {
             throw new BusinessException("您已经提交过抢购，如果抢购成功请下单，否则耐心等待哦...");
         }
 
@@ -107,14 +107,14 @@ public class GoodsService {
         messageTrunk.put(message);
 
         // 加入正在处理列表
-        miaoshaHandlingListCache.add2HanleList(mobile, goodsRandomName);
+        spikeHandlingListCache.add2HanleList(mobile, goodsRandomName);
 
     }
 
     private Goods checkStore(String goodsRandomName) {
         Goods goods = goodsMapper.selectByRandomName(goodsRandomName);
         if (goods == null || goods.getStore() <= 0) {
-            miaoshaFinishCache.setFinish(goodsRandomName);
+            spikeFinishCache.setFinish(goodsRandomName);
             throw new RuntimeException("很遗憾，抢购已经结束了哟"); // 库存不足，抢购失败
         }
         return goods;
@@ -154,7 +154,7 @@ public class GoodsService {
     public Integer order(String mobile, Integer goodsId, String token) {
         // 先检查token有效性
         Goods goodsInfo = goodsInfoCacheWorker.get(goodsId, Goods.class);
-        if (!miaoshaSuccessTokenCache.validateToken(mobile, goodsInfo.getRandomName(), token)) {
+        if (!spikeSuccessTokenCache.validateToken(mobile, goodsInfo.getRandomName(), token)) {
             throw new BusinessException("token不对，不能下单哦");
         }
 

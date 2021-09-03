@@ -1,8 +1,8 @@
 package com.msr.better.mq;
 
 import com.msr.better.cache.GoodsRedisStoreCache;
-import com.msr.better.cache.MiaoshaFinishCache;
-import com.msr.better.cache.MiaoshaSuccessTokenCache;
+import com.msr.better.cache.SpikeFinishCache;
+import com.msr.better.cache.SpikeSuccessTokenCache;
 import com.msr.better.cache.UserBlackListCache;
 import com.msr.better.constant.MessageType;
 import com.msr.better.exception.BusinessException;
@@ -22,13 +22,13 @@ public class MiaoshaRequestHandler extends AbstractMessageHandler<MiaoshaRequest
     private GoodsRedisStoreCache goodsRedisStoreCache;
 
     @Autowired
-    private MiaoshaSuccessTokenCache miaoshaSuccessTokenCache;
+    private SpikeSuccessTokenCache spikeSuccessTokenCache;
 
     @Autowired
     private UserBlackListCache userBlackListCache;
 
     @Autowired
-    private MiaoshaFinishCache miaoshaFinishCache;
+    private SpikeFinishCache spikeFinishCache;
 
     public MiaoshaRequestHandler() {
         // 说明该handler监控的消息类型；失败重试次数设定为MAX_VALUE
@@ -49,7 +49,7 @@ public class MiaoshaRequestHandler extends AbstractMessageHandler<MiaoshaRequest
         // logger.error("1耗时：" + (System.currentTimeMillis() - startTime));
         long startTime2 = System.currentTimeMillis();
         // 先看抢购是否已经结束了
-        if (miaoshaFinishCache.isFinish(message.getGoodsRandomName())) {
+        if (spikeFinishCache.isFinish(message.getGoodsRandomName())) {
             logger.error("抱歉，您来晚了，抢购已经结束了");
             return;
         }
@@ -63,7 +63,7 @@ public class MiaoshaRequestHandler extends AbstractMessageHandler<MiaoshaRequest
         // logger.error("3耗时：" + (System.currentTimeMillis() - startTime));
         long startTime4 = System.currentTimeMillis();
         // 减库存成功：生成下单token，并存入redis供前端获取
-        String token = miaoshaSuccessTokenCache.genToken(message.getMobile(), message.getGoodsRandomName());
+        String token = spikeSuccessTokenCache.genToken(message.getMobile(), message.getGoodsRandomName());
         // logger.error("4耗时：" + (System.currentTimeMillis() - startTime));
         long startTime5 = System.currentTimeMillis();
         StringBuilder sb = new StringBuilder();

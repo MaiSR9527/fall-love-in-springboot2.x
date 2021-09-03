@@ -1,7 +1,7 @@
 package com.msr.better.controller;
 
 
-import com.msr.better.cache.MiaoshaSuccessTokenCache;
+import com.msr.better.cache.SpikeSuccessTokenCache;
 import com.msr.better.service.GoodsService;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,15 +17,15 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 2021-09-01 21:02:51
  */
 @RestController
-@RequestMapping(value = "/spike/")
+@RequestMapping(value = "/goods")
 public class SpikeController {
     private final GoodsService goodsService;
 
-    private final MiaoshaSuccessTokenCache miaoshaSuccessTokenCache;
+    private final SpikeSuccessTokenCache spikeSuccessTokenCache;
 
-    public SpikeController(GoodsService goodsService, MiaoshaSuccessTokenCache miaoshaSuccessTokenCache) {
+    public SpikeController(GoodsService goodsService, SpikeSuccessTokenCache spikeSuccessTokenCache) {
         this.goodsService = goodsService;
-        this.miaoshaSuccessTokenCache = miaoshaSuccessTokenCache;
+        this.spikeSuccessTokenCache = spikeSuccessTokenCache;
     }
 
     /**
@@ -37,12 +37,12 @@ public class SpikeController {
      */
 //    @Intercept(value = {UserInterceptor.class})
     // @Intercept(value = { ExecuteTimeInterceptor.class })
-    @RequestMapping(value = "miaosha")
-    public String miaosha(String mobile, String goodsRandomName) {
+    @RequestMapping(value = "spike")
+    public String spike(String mobile, String goodsRandomName) {
         Assert.notNull(goodsRandomName, "商品名不能为空");
         Assert.notNull(mobile, "手机号不能为空");
 
-        goodsService.miaosha(mobile, goodsRandomName);
+        goodsService.spike(mobile, goodsRandomName);
 
         // 为什么要返回mobile，为了方便jmeter测试
         return mobile;
@@ -54,8 +54,8 @@ public class SpikeController {
      * @param goodsId
      * @return
      */
-    @RequestMapping(value = "{goodsId}/getMiaoshaGoodsLink")
-    public String getMiaoshaGoodsLink(@PathVariable Integer goodsId) {
+    @RequestMapping(value = "{goodsId}/getSpikeGoodsLink")
+    public String getSpikeGoodsLink(@PathVariable Integer goodsId) {
         return goodsService.getGoodsRandomName(goodsId);
     }
 
@@ -66,10 +66,10 @@ public class SpikeController {
      * @param goodsId
      * @return
      */
-    @RequestMapping(value = "miaoshaResult")
-    public String isMiaoshaSuccess(String mobile, String goodsRandomName) {
+    @RequestMapping(value = "spikeResult")
+    public String isSpikeSuccess(String mobile, String goodsRandomName) {
         // 直接取缓存查询是否有成功的记录生成
-        return miaoshaSuccessTokenCache.queryToken(mobile, goodsRandomName);
+        return spikeSuccessTokenCache.queryToken(mobile, goodsRandomName);
     }
 
     /**
