@@ -1,6 +1,5 @@
 package com.msr.better.redis.util;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.StringRedisConnection;
@@ -140,7 +139,6 @@ public class RedisUtil {
                 return null;
             }
         });
-
         return result;
     }
 
@@ -209,7 +207,7 @@ public class RedisUtil {
      * @return 列表key的头元素。
      */
     public String lpop(String key) {
-        return (String) redisTemplate.opsForList().leftPop(key);
+        return redisTemplate.opsForList().leftPop(key);
     }
 
     /**
@@ -221,5 +219,9 @@ public class RedisUtil {
      */
     public long rpush(String key, String value) {
         return redisTemplate.opsForList().rightPush(key, value);
+    }
+
+    public String rpop(String key) {
+        return redisTemplate.opsForList().rightPop(key);
     }
 }
