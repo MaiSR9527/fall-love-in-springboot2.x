@@ -20,6 +20,8 @@
         <module>boot-test-deploy</module>
         <module>sample/sample1-project</module>
         <module>boot-think-design</module>
+        <module>boot-kafka</module>
+        <module>boot-common</module>
     </modules>
 
     <parent>
@@ -36,6 +38,12 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
     </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-logging</artifactId>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
