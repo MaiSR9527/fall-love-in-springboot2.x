@@ -72,14 +72,14 @@ public class TestController {
         HashMap<Object, Object> map = new HashMap<>();
         map.put("error_code", 500);
         map.put("msg", "inner server error");
-//        try {
-//            TimeUnit.SECONDS.sleep(5);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-        if (request.getRemoteAddr().equals("127.0.0.1")) {
-            throw new RuntimeException("ni hao");
+        try {
+            TimeUnit.SECONDS.sleep(10);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+//        if (request.getRemoteAddr().equals("127.0.0.1")) {
+//            throw new RuntimeException("ni hao");
+//        }
         return map;
     }
 
