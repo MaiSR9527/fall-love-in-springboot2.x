@@ -1,6 +1,5 @@
 package com.msr.better.component;
 
-import jdk.nashorn.internal.objects.annotations.Getter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 

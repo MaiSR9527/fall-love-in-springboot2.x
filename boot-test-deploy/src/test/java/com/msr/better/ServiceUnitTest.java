@@ -1,20 +1,15 @@
 package com.msr.better;
 
 import com.msr.better.controller.SysUserController;
-import com.msr.better.domain.SysUser;
-import com.msr.better.service.ISysUserService;
 import com.msr.better.service.ThirdSystemService;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -22,20 +17,15 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import javax.servlet.http.Cookie;
-import javax.transaction.Transactional;
-
-import java.io.File;
 import java.io.FileInputStream;
-
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
 
 /**
  * @author MaiShuRen
  * @site https://www.maishuren.top
  * @since 2021-08-04 22:15:14
  */
-@RunWith(SpringRunner.class)
+//@RunWith(SpringRunner.class)
+@SpringBootTest
 @WebMvcTest(SysUserController.class)
 //@Transactional
 public class ServiceUnitTest {
@@ -66,7 +56,7 @@ public class ServiceUnitTest {
         mockMvc.perform(requestBuilder)
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id", "id").value(2L))
                 .andExpect(MockMvcResultMatchers.view().name("index.html"))
-                .andExpect(MockMvcResultMatchers.model().attribute("id",1L))
+                .andExpect(MockMvcResultMatchers.model().attribute("id", 1L))
                 .andDo(MockMvcResultHandlers.print());
     }
 
