@@ -1,4 +1,4 @@
-package com.msr.better.common.util.constants;
+package com.msr.better.common.constants;
 
 /**
  * @author MaiShuRen

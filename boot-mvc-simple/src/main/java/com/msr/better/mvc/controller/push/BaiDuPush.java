@@ -3,7 +3,7 @@ package com.msr.better.mvc.controller.push;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.msr.better.common.util.HttpClientUtils;
-import com.msr.better.common.util.constants.MaiConstant;
+import com.msr.better.common.constants.MaiConstant;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
