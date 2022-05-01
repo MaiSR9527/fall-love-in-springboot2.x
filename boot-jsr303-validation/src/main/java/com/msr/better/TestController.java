@@ -72,17 +72,17 @@ public class TestController {
     public Object testClient(HttpServletRequest request, HttpServletResponse response) {
         logger.info("coming in {}", request.getRemoteAddr());
         HashMap<Object, Object> map = new HashMap<>();
-        map.put("error_code", 500);
-        map.put("msg", "inner server error");
-        try {
-            TimeUnit.SECONDS.sleep(10);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        map.put("error_code", 5000);
+        map.put("msg", "业务繁忙请重试");
+//        try {
+//            TimeUnit.SECONDS.sleep(10);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 //        if (request.getRemoteAddr().equals("127.0.0.1")) {
 //            throw new RuntimeException("ni hao");
 //        }
-        response.setStatus(503);
+//        response.setStatus(503);
         return map;
     }
 

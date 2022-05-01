@@ -1,6 +1,7 @@
 package com.msr.better.mvc.controller;
 
 import com.msr.better.common.util.HttpClientUtils;
+import com.msr.better.mvc.http.MyServiceUnavailableRetryStrategy;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -43,7 +44,8 @@ public class HttpClientController {
     public Object test() {
         String url = "http://127.0.0.1:8080/test/client";
 //        CloseableHttpClient httpClient = HttpClientUtils.createHttpClient(TIMEOUT, new MyHttpRequestRetryHandler(RETRY_COUNT), new MyRetryStrategy());
-        CloseableHttpClient httpClient = HttpClientUtils.createHttpClient(TIMEOUT, new MyHttpRequestRetryHandler(RETRY_COUNT));
+        CloseableHttpClient httpClient = HttpClientUtils.createHttpClient(TIMEOUT, new MyHttpRequestRetryHandler(RETRY_COUNT),
+                new MyServiceUnavailableRetryStrategy());
         HttpGet httpGet = new HttpGet(url);
         logger.info("开始请求: {}", url);
         try {
@@ -71,6 +73,7 @@ public class HttpClientController {
 
         @Override
         public boolean retryRequest(IOException exception, int executionCount, HttpContext httpContext) {
+            logger.info("Come in MyHttpRequestRetryHandler");
             if (executionCount > this.retryCount) {
                 logger.warn("重试次数已达上限：{}", this.retryCount);
                 return false;

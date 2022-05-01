@@ -105,6 +105,27 @@ public class HttpClientUtils {
                 .build();
     }
 
+    @NonNull
+    public static CloseableHttpClient createHttpsClient(int timeout, HttpRequestRetryHandler retryHandler, ServiceUnavailableRetryStrategy retryStrategy)
+            throws KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
+        if (Objects.isNull(retryHandler)) {
+            return createHttpsClient(timeout);
+        }
+        if (Objects.isNull(retryStrategy)) {
+            return createHttpsClient(timeout, retryHandler);
+        }
+        SSLContext sslContext = new SSLContextBuilder()
+                .loadTrustMaterial(null, (certificate, authType) -> true)
+                .build();
+
+        return resolveProxySetting(HttpClients.custom())
+                .setSSLContext(sslContext)
+                .setSSLHostnameVerifier(new NoopHostnameVerifier())
+                .setRetryHandler(retryHandler)
+                .setDefaultRequestConfig(getRequestConfig(timeout))
+                .build();
+    }
+
     /**
      * Creates http client
      * author MaiShuRen
@@ -143,6 +164,9 @@ public class HttpClientUtils {
     public static CloseableHttpClient createHttpClient(int timeout, HttpRequestRetryHandler retryHandler, ServiceUnavailableRetryStrategy retryStrategy) {
         if (Objects.isNull(retryHandler)) {
             return createHttpClient(timeout);
+        }
+        if (Objects.isNull(retryStrategy)) {
+            return createHttpClient(timeout, retryHandler);
         }
         return resolveProxySetting(HttpClients.custom())
                 .setDefaultRequestConfig(getRequestConfig(timeout))
