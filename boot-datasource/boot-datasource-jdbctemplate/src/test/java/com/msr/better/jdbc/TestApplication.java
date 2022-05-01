@@ -2,11 +2,9 @@ package com.msr.better.jdbc;
 
 import com.msr.better.jdbc.domain.Student;
 import com.msr.better.jdbc.service.IStudentService;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
 
@@ -15,7 +13,6 @@ import java.util.List;
  * @site https://www.maishuren.top
  * @since 2021-04-30 00:00
  **/
-@RunWith(SpringRunner.class)
 @SpringBootTest
 public class TestApplication {
 

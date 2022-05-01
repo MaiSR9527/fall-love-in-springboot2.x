@@ -26,26 +26,24 @@ public class JedisBenchmark {
     }
 
     private static void dotest() throws Exception {
-        GenericObjectPoolConfig<Object> poolConfig = new GenericObjectPoolConfig<>();
+        GenericObjectPoolConfig<Jedis> poolConfig = new GenericObjectPoolConfig<>();
         poolConfig.setMinIdle(0);
         poolConfig.setMaxIdle(5);
         poolConfig.setMaxTotal(5);
-        final JedisPool pool = new JedisPool(poolConfig, "127.0.0.1", 6379, 2000, "weimob123", 8);
+        final JedisPool pool = new JedisPool(poolConfig, "127.0.0.1", 6379, 2000, "weimob123");
 
-        List<Thread> tds = new ArrayList<Thread>();
+        List<Thread> tds = new ArrayList<>();
         final Integer temp = 0;
         final AtomicInteger ind = new AtomicInteger();
         for (int i = 0; i < 50; i++) {
-            Thread hj = new Thread(new Runnable() {
-                public void run() {
-                    for (int i = 0; (i = ind.getAndIncrement()) < TOTAL_OPERATIONS; ) {
+            Thread hj = new Thread(() -> {
+                for (int i1; (i1 = ind.getAndIncrement()) < TOTAL_OPERATIONS; ) {
 
-                        Jedis j = pool.getResource();
-                        final String key = "foo" + i;
-                        // redisUtil.set(key, key);
-                        j.set(key.getBytes(), ConvertUtil.serialize(temp));
-                        j.close();
-                    }
+                    Jedis j = pool.getResource();
+                    final String key = "foo" + i1;
+                    // redisUtil.set(key, key);
+                    j.set(key.getBytes(), ConvertUtil.serialize(temp));
+                    j.close();
                 }
             });
             tds.add(hj);
