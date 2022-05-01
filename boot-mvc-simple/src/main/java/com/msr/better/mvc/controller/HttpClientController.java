@@ -48,8 +48,9 @@ public class HttpClientController {
                 new MyServiceUnavailableRetryStrategy());
         HttpGet httpGet = new HttpGet(url);
         logger.info("开始请求: {}", url);
+        CloseableHttpResponse httpResponse = null;
         try {
-            CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
+            httpResponse = httpClient.execute(httpGet);
             int statusCode = httpResponse.getStatusLine().getStatusCode();
             String httpResult = EntityUtils.toString(httpResponse.getEntity());
             if (statusCode == HttpStatus.SC_OK) {
@@ -58,6 +59,14 @@ public class HttpClientController {
             }
         } catch (IOException e) {
             logger.error("接口请求异常", e);
+        } finally {
+            if (httpResponse != null) {
+                try {
+                    httpResponse.close();
+                } catch (IOException e) {
+                    logger.error("close response fail ",e);
+                }
+            }
         }
         return "接口异常返回";
     }

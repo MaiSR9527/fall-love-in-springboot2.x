@@ -74,11 +74,11 @@ public class TestController {
         HashMap<Object, Object> map = new HashMap<>();
         map.put("error_code", 5000);
         map.put("msg", "业务繁忙请重试");
-//        try {
-//            TimeUnit.SECONDS.sleep(10);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
+        try {
+            TimeUnit.SECONDS.sleep(10);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 //        if (request.getRemoteAddr().equals("127.0.0.1")) {
 //            throw new RuntimeException("ni hao");
 //        }
