@@ -1,5 +1,6 @@
 package com.msr.better.mvc.controller;
 
+import com.msr.better.common.util.HttpClientUtils;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpStatus;
@@ -9,10 +10,7 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
@@ -21,18 +19,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
 
 /**
  * @author MaiShuRen
@@ -61,16 +52,6 @@ public class HttpClientController {
                 .setSocketTimeout(SOCKET_TIMEOUT).build();
     }
 
-    private static SSLContext createSSLContext() {
-        SSLContext sslcontext = null;
-        try {
-            sslcontext = SSLContext.getInstance("SSL");
-            sslcontext.init(null, new TrustManager[]{new TrustAnyTrustManager()}, new SecureRandom());
-        } catch (NoSuchAlgorithmException | KeyManagementException e) {
-            e.printStackTrace();
-        }
-        return sslcontext;
-    }
 
     @GetMapping("test")
     public Object test() {
@@ -79,7 +60,7 @@ public class HttpClientController {
 
 
     protected String request(String url) {
-        CloseableHttpClient httpClient = createCloseableHttpClient(url);
+        CloseableHttpClient httpClient = HttpClientUtils.createHttpClient(3000, new MyHttpRequestRetryHandler(3));
 
         HttpGet httpGet = new HttpGet(url);
         httpGet.setConfig(requestConfig);
@@ -99,34 +80,6 @@ public class HttpClientController {
         return null;
     }
 
-    private CloseableHttpClient createCloseableHttpClient(String url) {
-        CloseableHttpClient httpClient;
-        try {
-            SSLContext sslContext = createSSLContext();
-            SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(sslContext, (s, sslSession) -> true);
-            httpClient = HttpClients.custom().setSSLSocketFactory(socketFactory)
-                    .setSSLHostnameVerifier(new NoopHostnameVerifier())
-                    .setConnectionManager(poolingHttpClientConnectionManager)
-                    .setRetryHandler(new MyHttpRequestRetryHandler(3)).build();
-
-        } catch (Exception e) {
-            throw new RuntimeException(e.getLocalizedMessage(), e);
-        }
-        return httpClient;
-    }
-
-    private static class TrustAnyTrustManager implements X509TrustManager {
-
-        public void checkClientTrusted(X509Certificate[] chain, String authType) {
-        }
-
-        public void checkServerTrusted(X509Certificate[] chain, String authType) {
-        }
-
-        public X509Certificate[] getAcceptedIssuers() {
-            return new X509Certificate[]{};
-        }
-    }
 
     private static class MyHttpRequestRetryHandler implements HttpRequestRetryHandler {
 

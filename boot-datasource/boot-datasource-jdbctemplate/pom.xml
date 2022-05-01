@@ -6,6 +6,7 @@
         <artifactId>fall-love-in-springboot2</artifactId>
         <groupId>com.msr.better</groupId>
         <version>1.0.0</version>
+        <relativePath>../../../fall-love-in-springboot2.x</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
