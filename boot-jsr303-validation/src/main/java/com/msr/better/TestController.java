@@ -4,6 +4,7 @@ import com.msr.better.bean.Article;
 import com.msr.better.validate.ValidateGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
@@ -67,7 +69,7 @@ public class TestController {
     }
 
     @GetMapping("test/client")
-    public Object testClient(HttpServletRequest request) {
+    public Object testClient(HttpServletRequest request, HttpServletResponse response) {
         logger.info("coming in {}", request.getRemoteAddr());
         HashMap<Object, Object> map = new HashMap<>();
         map.put("error_code", 500);
@@ -80,6 +82,7 @@ public class TestController {
 //        if (request.getRemoteAddr().equals("127.0.0.1")) {
 //            throw new RuntimeException("ni hao");
 //        }
+        response.setStatus(503);
         return map;
     }
 

@@ -3,15 +3,16 @@ package com.msr.better.mvc.controller;
 import com.msr.better.common.util.HttpClientUtils;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NoHttpResponseException;
 import org.apache.http.client.HttpRequestRetryHandler;
-import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.ServiceUnavailableRetryStrategy;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
@@ -34,50 +35,29 @@ import java.net.UnknownHostException;
 public class HttpClientController {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpClientController.class);
-    private static final int CONNECT_TIMEOUT = 3000;
-    private static final int CONNECT_REQUEST_TIMEOUT = 3000;
-    private static final int SOCKET_TIMEOUT = 3000;
-    private static final int DEFAULT_TOTAL = 20;
-    private static final int MAX_TOTAL = 100;
-    private static PoolingHttpClientConnectionManager poolingHttpClientConnectionManager = null;
-    private static RequestConfig requestConfig = null;
-
-    static {
-        poolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager();
-        poolingHttpClientConnectionManager.setMaxTotal(MAX_TOTAL);
-        poolingHttpClientConnectionManager.setDefaultMaxPerRoute(DEFAULT_TOTAL);
-        requestConfig = RequestConfig.custom()
-                .setConnectTimeout(CONNECT_TIMEOUT)
-                .setConnectionRequestTimeout(CONNECT_REQUEST_TIMEOUT)
-                .setSocketTimeout(SOCKET_TIMEOUT).build();
-    }
+    private static final int TIMEOUT = 3000;
+    private static final int RETRY_COUNT = 3;
 
 
     @GetMapping("test")
     public Object test() {
-        return request("http://127.0.0.1:8080/test/client");
-    }
-
-
-    protected String request(String url) {
-        CloseableHttpClient httpClient = HttpClientUtils.createHttpClient(3000, new MyHttpRequestRetryHandler(3));
-
+        String url = "http://127.0.0.1:8080/test/client";
+//        CloseableHttpClient httpClient = HttpClientUtils.createHttpClient(TIMEOUT, new MyHttpRequestRetryHandler(RETRY_COUNT), new MyRetryStrategy());
+        CloseableHttpClient httpClient = HttpClientUtils.createHttpClient(TIMEOUT, new MyHttpRequestRetryHandler(RETRY_COUNT));
         HttpGet httpGet = new HttpGet(url);
-        httpGet.setConfig(requestConfig);
-        logger.info("转化数据回传: {}", url);
-
+        logger.info("开始请求: {}", url);
         try {
             CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
             int statusCode = httpResponse.getStatusLine().getStatusCode();
             String httpResult = EntityUtils.toString(httpResponse.getEntity());
             if (statusCode == HttpStatus.SC_OK) {
-                logger.info("上报转化数据结果:{}", httpResult);
+                logger.info("请求结果:{}", httpResult);
                 return httpResult;
             }
         } catch (IOException e) {
-            logger.error("转化数据回传到失败,准备重试", e);
+            logger.error("接口请求异常", e);
         }
-        return null;
+        return "接口异常返回";
     }
 
 
@@ -113,6 +93,19 @@ public class HttpClientController {
             HttpRequest request = clientContext.getRequest();
             // Retry if the request is considered idempotent
             return !(request instanceof HttpEntityEnclosingRequest);
+        }
+    }
+
+    private static class MyRetryStrategy implements ServiceUnavailableRetryStrategy {
+
+        @Override
+        public boolean retryRequest(HttpResponse response, int executionCount, HttpContext context) {
+            return false;
+        }
+
+        @Override
+        public long getRetryInterval() {
+            return 0;
         }
     }
 }

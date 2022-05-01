@@ -6,10 +6,12 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpRequestRetryHandler;
+import org.apache.http.client.ServiceUnavailableRetryStrategy;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultServiceUnavailableRetryStrategy;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -42,7 +44,7 @@ public class HttpClientUtils {
 
     private static final int DEFAULT_TOTAL = 20;
     private static final int MAX_TOTAL = 100;
-    private static PoolingHttpClientConnectionManager poolingHttpClientConnectionManager = null;
+    private static final PoolingHttpClientConnectionManager poolingHttpClientConnectionManager;
 
     static {
         poolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager();
@@ -129,9 +131,25 @@ public class HttpClientUtils {
         if (Objects.isNull(retryHandler)) {
             return createHttpClient(timeout);
         }
-        return HttpClients.custom()
+        return resolveProxySetting(HttpClients.custom())
+                .setDefaultRequestConfig(getRequestConfig(timeout))
                 .setConnectionManager(poolingHttpClientConnectionManager)
-                .setRetryHandler(retryHandler).build();
+                .setRetryHandler(retryHandler)
+                .setServiceUnavailableRetryStrategy(new DefaultServiceUnavailableRetryStrategy())
+                .build();
+    }
+
+    @NonNull
+    public static CloseableHttpClient createHttpClient(int timeout, HttpRequestRetryHandler retryHandler, ServiceUnavailableRetryStrategy retryStrategy) {
+        if (Objects.isNull(retryHandler)) {
+            return createHttpClient(timeout);
+        }
+        return resolveProxySetting(HttpClients.custom())
+                .setDefaultRequestConfig(getRequestConfig(timeout))
+                .setConnectionManager(poolingHttpClientConnectionManager)
+                .setRetryHandler(retryHandler)
+                .setServiceUnavailableRetryStrategy(retryStrategy)
+                .build();
     }
 
     /**
