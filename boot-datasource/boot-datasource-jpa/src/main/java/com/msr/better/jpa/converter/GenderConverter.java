@@ -9,7 +9,7 @@ import javax.persistence.AttributeConverter;
  * @site https://www.maishuren.top
  * @since 2021-08-02 00:31:35
  */
-public class GengerConverter implements AttributeConverter<GenderEnum, Integer> {
+public class GenderConverter implements AttributeConverter<GenderEnum, Integer> {
     @Override
     public Integer convertToDatabaseColumn(GenderEnum genderEnum) {
         return genderEnum.getId();

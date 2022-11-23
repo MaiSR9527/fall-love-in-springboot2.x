@@ -22,4 +22,6 @@ public interface IStudentService {
     void deleteStudent(Long id);
 
     List<Student> findAll();
+
+    int saveBatchTest();
 }

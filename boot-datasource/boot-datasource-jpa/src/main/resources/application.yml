@@ -1,7 +1,9 @@
+server:
+  port: 8089
 spring:
   datasource:
     username: root
-    password: root123
+    password: root123456
     url: jdbc:mysql://127.0.0.1:3306/test?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useSSL=false
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
@@ -9,5 +11,8 @@ spring:
     hibernate:
       ddl-auto: update
       naming:
-        # 驼峰命名映射
         physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        storage_engine: innodb

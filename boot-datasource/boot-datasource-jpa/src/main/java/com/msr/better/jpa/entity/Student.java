@@ -1,10 +1,11 @@
 package com.msr.better.jpa.entity;
 
 import com.msr.better.jpa.constants.GenderEnum;
-import com.msr.better.jpa.converter.GengerConverter;
+import com.msr.better.jpa.converter.GenderConverter;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.util.Date;
 
 /**
  * @author MaiShuRen
@@ -19,7 +20,18 @@ public class Student {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-    @Convert(converter = GengerConverter.class)
+    @Convert(converter = GenderConverter.class)
     private GenderEnum gender;
     private Integer age;
+    private String education;
+    private Integer status;
+    private Integer enableStatus;
+    private String position;
+    private String idCardNumber;
+    private Date createTime;
+    private String creator;
+    private Date updateTime;
+    private String modifier;
+    private String nickName;
+    private String iconPath;
 }
