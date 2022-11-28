@@ -18,8 +18,13 @@ public class TestController {
     @Autowired
     private IStudentService studentService;
 
-    @GetMapping("/batchSave")
+    @GetMapping("batchSave")
     public Object batchSave() {
         return studentService.saveBatchTest();
+    }
+
+    @GetMapping("saveRelation")
+    public Object saveRelation() {
+        return studentService.saveRelation();
     }
 }

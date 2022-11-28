@@ -24,4 +24,7 @@ public interface IStudentService {
     List<Student> findAll();
 
     int saveBatchTest();
+
+    Object saveRelation();
+
 }
