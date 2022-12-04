@@ -1,10 +1,13 @@
 package com.msr.better.jpa.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 import com.msr.better.jpa.constants.GenderEnum;
 import com.msr.better.jpa.converter.GenderConverter;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -15,7 +18,8 @@ import java.util.Date;
 @Data
 @Entity
 @Table(name = "t_student")
-public class Student {
+@JsonIgnoreProperties(value = {"handler", "hibernateLazyInitializer", "fieldHandler"})
+public class Student implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -1,6 +1,7 @@
 package com.msr.better.jpa.service.impl;
 
 import com.msr.better.jpa.constants.GenderEnum;
+import com.msr.better.jpa.controller.TestController;
 import com.msr.better.jpa.dao.ICourseRepository;
 import com.msr.better.jpa.dao.IScoreRepository;
 import com.msr.better.jpa.dao.StudentRepository;
@@ -41,10 +42,14 @@ public class StudentServiceImpl implements IStudentService {
     @Autowired
     private ApplicationContext context;
 
+    @Autowired
+    private TestController testController;
+
     @Transactional(rollbackFor = RuntimeException.class, propagation = Propagation.REQUIRES_NEW)
     @Override
     public Student findStudentById(Long id) {
-        return studentRepository.getOne(id);
+        testController.test();
+        return studentRepository.getById(id);
     }
 
     @Override
