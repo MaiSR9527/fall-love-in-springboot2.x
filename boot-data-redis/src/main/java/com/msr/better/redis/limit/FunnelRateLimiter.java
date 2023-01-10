@@ -56,7 +56,8 @@ public class FunnelRateLimiter {
 
         protected void makeSpace() {
             long nowTs = System.currentTimeMillis();
-            long deltaQuota = nowTs - leakingTs;
+            long deltaTs = nowTs - leakingTs;
+            int deltaQuota = (int) (deltaTs * leftQuota);
             // 间隔时间太溢出
             if (deltaQuota < 0) {
                 this.leftQuota = capacity;
@@ -66,11 +67,12 @@ public class FunnelRateLimiter {
 
             // 腾出空间太小，最小单位是1
             if (deltaQuota < 1) {
-                this.leftQuota += deltaQuota;
-                this.leakingTs = nowTs;
-                if (this.leftQuota > this.capacity) {
-                    this.leftQuota = this.capacity;
-                }
+                return;
+            }
+            this.leftQuota += deltaQuota;
+            this.leakingTs = nowTs;
+            if (this.leftQuota > this.capacity) {
+                this.leftQuota = this.capacity;
             }
         }
 
