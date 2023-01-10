@@ -6,6 +6,20 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 漏斗限流
+ * Redis-Cell限流模块
+ * 指令：cl.throttle key arg1 arg2 arg3 arg4
+ * arg1 漏斗容量
+ * arg2 operations
+ * arg3 单位时间内
+ * arg2/arg3 漏水速率
+ * arg4 可选参数，默认是1 quota
+ *
+ *  > cl.throttle redis:funnelLimiter  15  30  60
+ *  1) (integer) 0    # 0表示允许，1 表示拒绝
+ *  2) (integer) 15   # 漏斗容量
+ *  3) (integer) 14   # 漏斗剩余容量 leftQuota
+ *  4) (integer) -1   # 表示如果被拒绝了，需要多长时间后在试（单位秒）
+ *  5) (integer) 2    # 多长时间后漏斗完全空出来（单位秒）
  *
  * @author MaiShuRen
  * @site <a href="https://www.maishuren.top">maiBlog</a>
