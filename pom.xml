@@ -22,6 +22,7 @@
         <module>boot-think-design</module>
         <module>boot-kafka</module>
         <module>boot-common</module>
+        <module>boot-rabbitmq</module>
     </modules>
 
     <parent>
