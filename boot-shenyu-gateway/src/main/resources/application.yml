@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: client
+shenyu:
+  register:
+    register-type: http
+    server-lists: http://localhost:9095
+    props:
+      username: admin
+      password: 123456
+
+  client:
+    http:
+      props:
+        contextPath: /client
+        appName: ${spring.application.name}
+        addPrefixed: true
+logging:
+  level:
+    root: info
+    org.apache.shenyu: debug

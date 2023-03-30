@@ -24,6 +24,8 @@
         <module>boot-common</module>
         <module>boot-rabbitmq</module>
         <module>boot-security</module>
+        <module>boot-shenyu-gateway</module>
+        <module>boot-starter</module>
     </modules>
 
     <parent>
