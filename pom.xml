@@ -23,6 +23,7 @@
         <module>boot-kafka</module>
         <module>boot-common</module>
         <module>boot-rabbitmq</module>
+        <module>boot-security</module>
     </modules>
 
     <parent>
