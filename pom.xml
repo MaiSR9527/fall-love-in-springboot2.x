@@ -24,8 +24,8 @@
         <module>boot-common</module>
         <module>boot-rabbitmq</module>
         <module>boot-security</module>
-        <module>boot-shenyu-gateway</module>
         <module>boot-starter</module>
+        <module>boot-reactor</module>
     </modules>
 
     <parent>
@@ -42,12 +42,6 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
-    <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-logging</artifactId>
-        </dependency>
-    </dependencies>
 
     <build>
         <plugins>
