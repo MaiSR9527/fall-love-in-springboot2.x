@@ -26,6 +26,7 @@
         <module>boot-security</module>
         <module>boot-starter</module>
         <module>boot-reactor</module>
+        <module>boot-dubbo</module>
     </modules>
 
     <parent>
