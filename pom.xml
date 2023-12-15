@@ -20,13 +20,12 @@
         <module>boot-test-deploy</module>
         <module>sample/sample1-project</module>
         <module>boot-think-design</module>
-        <module>boot-kafka</module>
         <module>boot-common</module>
-        <module>boot-rabbitmq</module>
         <module>boot-security</module>
         <module>boot-starter</module>
         <module>boot-reactor</module>
         <module>boot-dubbo</module>
+        <module>boot-mq-stream</module>
     </modules>
 
     <parent>

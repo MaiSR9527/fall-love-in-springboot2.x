@@ -8,7 +8,7 @@ import org.springframework.context.annotation.ImportResource;
 
 /**
  * @date: 2023-10-24
- * @author: maisr@tsintergy.com
+ * @author: maisrcn@qq.com
  */
 @ImportResource("classpath:provider.xml")
 @SpringBootApplication
