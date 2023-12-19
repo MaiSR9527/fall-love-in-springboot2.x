@@ -38,7 +38,7 @@ public class SendCommonMessage {
             SendResult sendResult = commonMessageProducer.send(message);
             log.info("发送成功：{}", sendResult);
         }
-        commonMessageProducer.shutdown();
+        // commonMessageProducer.shutdown();
     }
 
     private static void SendAsync() throws Exception {
@@ -80,6 +80,6 @@ public class SendCommonMessage {
         // 异步发送，如果要求可靠传输，必须要等回调接口返回明确结果后才能结束逻辑，否则立即关闭Producer可能导致部分消息尚未传输成功
         boolean await = countDownLatch.await(5, TimeUnit.SECONDS);
         // 一旦producer不再使用，关闭producer
-        producer.shutdown();
+        // producer.shutdown();
     }
 }
