@@ -8,9 +8,12 @@ import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.client.consumer.rebalance.AllocateMessageQueueAveragely;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.message.MessageExt;
+import org.apache.rocketmq.common.message.MessageQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -22,13 +25,17 @@ public class ConsumeCommonMessage {
 
     private static final Logger log = LoggerFactory.getLogger(ConsumeCommonMessage.class);
 
+    public static volatile boolean running = true;
+
     public static void main(String[] args) throws MQClientException {
         // push消费模式。服务端主动推送消息给客户端，优点是及时性较好，但是如果客户端没有做好流控。一旦服务端推送了大量的消息，客户端可能会消息堆积甚至崩溃。
         // pushConsume();
         // pull消费模式
         DefaultLitePullConsumer defaultLitePullConsumer = new DefaultLitePullConsumer("pull_consumer_order_topic");
         defaultLitePullConsumer.setNamesrvAddr("localhost:9876");
-        defaultLitePullConsumer.subscribe("TopicTest", "*");
+        // subscribe 模式，设置每批获取的消息，自动提交消费位移，同一个消费组下的消费者和push模式一样会负载均衡消费
+        // defaultLitePullConsumer.subscribe("TopicTest", "*");
+        defaultLitePullConsumer.subscribe("TopicOrder", "*");
         defaultLitePullConsumer.setPullBatchSize(10);
         defaultLitePullConsumer.start();
         while (true) {
@@ -38,7 +45,7 @@ public class ConsumeCommonMessage {
                     TimeUnit.SECONDS.sleep(3);
                 } else {
                     for (MessageExt messageExt : messageExtList) {
-                        log.info("{} consume success {}", Thread.currentThread().getName(), messageExt);
+                        log.info("{} consume success {} {}", Thread.currentThread().getName(), messageExt.getQueueId(), messageExt.getKeys());
                         log.info("message body {}", new String(messageExt.getBody()));
                     }
                 }
@@ -75,5 +82,33 @@ public class ConsumeCommonMessage {
         // pushConsumerCommonTopic.setMessageModel(MessageModel.BROADCASTING);
         pushConsumerCommonTopic.start();
         log.info("Consumer started success");
+    }
+
+    public static void assignPull() throws MQClientException {
+        DefaultLitePullConsumer litePullConsumer = new DefaultLitePullConsumer("please_rename_unique_group_name");
+        // assign 模式下手动提交消费位移
+        litePullConsumer.setAutoCommit(false);
+        litePullConsumer.start();
+        // 获取主题下的消息队列
+        Collection<MessageQueue> mqSet = litePullConsumer.fetchMessageQueues("TopicTest");
+        List<MessageQueue> list = new ArrayList<>(mqSet);
+        List<MessageQueue> assignList = new ArrayList<>();
+        for (int i = 0; i < list.size() / 2; i++) {
+            assignList.add(list.get(i));
+        }
+        // 给 consumer 指定消费队列，因为 assign 模式下没有自动的消息负载均衡机制
+        litePullConsumer.assign(assignList);
+        // 指定从队列的开始消费的位移
+        litePullConsumer.seek(assignList.get(0), 10);
+        try {
+            while (running) {
+                List<MessageExt> messageExts = litePullConsumer.poll();
+                System.out.printf("%s %n", messageExts);
+                // 手动提交消费位移
+                litePullConsumer.commitSync();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
