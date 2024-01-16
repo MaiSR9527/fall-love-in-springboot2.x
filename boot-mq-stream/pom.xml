@@ -13,6 +13,7 @@
         <module>boot-rabbitmq</module>
         <module>boot-kafka</module>
         <module>boot-rocketmq</module>
+        <module>boot-message-bus</module>
     </modules>
 
     <dependencies>
