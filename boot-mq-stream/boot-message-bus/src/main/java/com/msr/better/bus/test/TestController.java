@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * @date: 2024-01-16
- * @author: maisr@tsintergy.com
+ * @author: maisrcn@qq.com
  */
 @RestController
 @RequestMapping("test")
@@ -35,6 +35,21 @@ public class TestController {
         UserDeleteEvent userDeleteEvent = new UserDeleteEvent();
         userDeleteEvent.setUserId("1");
         applicationContext.publishEvent(userDeleteEvent);
+        return "success";
+    }
+
+    @GetMapping("publish/type")
+    public Object publishType() {
+        UserDeleteEvent userDeleteEvent = new UserDeleteEvent();
+        userDeleteEvent.setUserId("1");
+        applicationContext.publishEvent(userDeleteEvent);
+
+        UserCreateEvent userCreateEvent = new UserCreateEvent();
+        userCreateEvent.setUserId("1");
+        userCreateEvent.setUsername("Lil Hua");
+        userCreateEvent.setAge(18);
+        userCreateEvent.setGender("Male");
+        applicationContext.publishEvent(userCreateEvent);
         return "success";
     }
 }
