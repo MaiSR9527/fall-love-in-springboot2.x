@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * @date: 2024-01-18
- * @author: maisr@tsintergy.com
+ * @author: maisrcn@qq.com
  */
 public class Treeutil {
 
