@@ -26,6 +26,7 @@
         <module>boot-reactor</module>
         <module>boot-dubbo</module>
         <module>boot-mq-stream</module>
+        <module>boot-distributed-practice</module>
     </modules>
 
     <parent>

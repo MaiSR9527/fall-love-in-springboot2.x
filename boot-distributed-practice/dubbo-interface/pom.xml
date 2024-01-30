@@ -1,0 +1,31 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>top.maishuren</groupId>
+        <artifactId>boot-distributed-practice</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>dubbo-interface</artifactId>
+    <packaging>jar</packaging>
+
+    <name>dubbo-interface</name>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.msr.better</groupId>
+            <artifactId>boot-common</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.yomahub</groupId>
+            <artifactId>tlog-dubbo-spring-boot-starter</artifactId>
+            <version>1.5.1</version>
+        </dependency>
+    </dependencies>
+</project>

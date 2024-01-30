@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <properties>
+        <!--项目名称-->
+        <property name="PROJECT">dubbo-service-b</property>
+        <!-- 日志存放的目录 -->
+        <property name="LOG_HOME">${sys:user.home}/log/tsintergy/${PROJECT}</property>
+        <!--
+            日志格式说明：
+            [${PROJECT}]：项目名称
+            [%d]：时间，精确到毫秒
+            [%-5p]：日志级别，五个字符对齐日志级别
+            [%t]：线程名称
+            [%C{1.}:%L]：打印日志的位置
+
+            示例：
+            [usercenter] [2021-12-24 15:28:55,720] [INFO ] [main] [c.b.d.d.DynamicRoutingDataSource:189] - 初始共加载 1 个数据源
+        -->
+        <Property name="PATTERN">[${PROJECT}] [%TX{tl}] [%d] [%-5p] [%t] [%C{1.}:%L] - %m%n</Property>
+    </properties>
+
+    <Appenders>
+        <!-- 输出到控制台 -->
+        <Console name="stdout" target="SYSTEM_OUT">
+            <PatternLayout>
+                <pattern>${PATTERN}</pattern>
+            </PatternLayout>
+        </Console>
+
+        <!-- 输出到滚动文件：应用日志 -->
+        <RollingFile name="app-log" fileName="${LOG_HOME}/app.log" filePattern="${LOG_HOME}/app-%d{yyyyMMdd}-%i.log.gz">
+            <!-- 这里不指定具体的日志级别过滤，具体的过滤由于logger控制 -->
+            <PatternLayout>
+                <pattern>${PATTERN}</pattern>
+            </PatternLayout>
+            <Policies>
+                <!-- 每天进行日志归档-->
+                <TimeBasedTriggeringPolicy modulate="true" interval="1"/>
+                <!-- 文件达到指定大小进行归档-->
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy>
+                <!-- 对于指定的路径下的指定格式的文件，只保留14天的日志文件-->
+                <Delete basePath="${LOG_HOME}" maxDepth="1">
+                    <IfFileName glob="app-*.gz"/>
+                    <IfLastModified age="14d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- 输出到滚动文件：应用错误日志 -->
+        <RollingFile name="app-error" fileName="${LOG_HOME}/error.log"
+                     filePattern="${LOG_HOME}/error-%d{yyyyMMdd}-%i.log.gz">
+            <!-- 只接收error及其以上级别的日志 -->
+            <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout>
+                <pattern>${PATTERN}</pattern>
+            </PatternLayout>
+            <Policies>
+                <!-- 每天进行日志归档-->
+                <TimeBasedTriggeringPolicy modulate="true" interval="1"/>
+                <!-- 文件达到指定大小进行归档-->
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy>
+                <!-- 对于指定的路径下的指定格式的文件，只保留14天的日志文件-->
+                <Delete basePath="${LOG_HOME}" maxDepth="1">
+                    <IfFileName glob="error-*.gz"/>
+                    <IfLastModified age="14d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Root level="INFO">
+            <!-- 将日志输出到控制台、应用日志、应用错误日志 -->
+            <AppenderRef ref="stdout"/>
+            <AppenderRef ref="app-log"/>
+            <AppenderRef ref="app-error"/>
+        </Root>
+
+        <!-- 以下logger没有指定AppenderRef，默认将集成Root中指定的AppenderRef -->
+        <logger name="org.apache" level="ERROR"/>
+        <logger name="org.springframework" level="ERROR"/>
+
+        <!-- 显示sql绑定参数的值 -->
+        <Logger name="org.hibernate" level="ERROR"/>
+        <!-- 见SqlStatementLogger -->
+        <Logger name="org.hibernate.SQL" level="ERROR"/>
+        <Logger name="org.hibernate.SQL_SLOW" level="ERROR"/>
+
+        <Logger name="org.I0Itec.zkclient" level="ERROR"/>
+        <Logger name="com.alibaba.nacos.client.naming" level="WARN"/>
+        <logger name="com.alibaba.dubbo" level="ERROR"/>
+        <logger name="com.alibaba.dubbo.monitor" level="ERROR"/>
+
+        <logger name="com.ulisesbocchio" level="ERROR"/>
+        <Logger name="springfox" level="WARN"/>
+
+        <Logger name="io.lettuce" level="ERROR"/>
+        <Logger name="io.netty" level="ERROR"/>
+    </Loggers>
+</Configuration>
